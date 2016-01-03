@@ -1,0 +1,106 @@
+package cdc
+
+import (
+	"encoding/binary"
+	"fmt"
+	"os"
+	"path"
+	"path/filepath"
+)
+
+var (
+	cacheDir  string               // cache directory
+	cacheAddr map[uint32]CacheAddr // [entry.hash]addr
+	cacheKey  map[uint32]string    // [entry.hash]entry.key
+)
+
+// Init reads cache at dir.
+func Init(dir string) error {
+	name := path.Clean(dir)
+	info, err := os.Stat(name)
+	if err != nil {
+		return err
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("not a directory: %s", dir)
+	}
+
+	_, err = os.Stat(path.Join(name, "index"))
+	if err != nil {
+		return err
+	}
+
+	blocks, err := filepath.Glob(path.Join(name, "data_[0-3]"))
+	if err != nil {
+		return err
+	}
+	if len(blocks) != 4 {
+		return fmt.Errorf("not a cache directory: %s", dir)
+	}
+
+	return initMaps(name)
+}
+
+func initMaps(dir string) error {
+	file, err := os.Open(path.Join(dir, "index"))
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	index := new(IndexHeader)
+	err = binary.Read(file, binary.LittleEndian, index)
+	if err != nil {
+		return err
+	}
+
+	cacheDir = dir
+	cacheAddr = make(map[uint32]CacheAddr)
+	cacheKey = make(map[uint32]string)
+
+	i := index.TableLen
+	for ; i > 0; i-- {
+		addr := new(CacheAddr)
+		err = binary.Read(file, binary.LittleEndian, addr)
+		if err != nil {
+			break
+		}
+		initCacheEntry(*addr)
+	}
+
+	return err
+}
+
+func initCacheEntry(addr CacheAddr) {
+	entry, err := openAddr(addr)
+	if err == nil &&
+		entry.State == 0 &&
+		// KeyLen may be larger, not managed
+		entry.KeyLen <= kBlockKeyLen {
+
+		cacheAddr[entry.Hash] = addr
+		cacheKey[entry.Hash] = entry.URL()
+	}
+}
+
+// Urls returns an iterator over all the URL in cache.
+func Urls() <-chan string {
+	ch := make(chan string)
+	go func() {
+		for _, val := range cacheKey {
+			ch <- val
+		}
+		close(ch)
+	}()
+	return ch
+}
+
+// Hash returns the url hash.
+func Hash(url string) uint32 {
+	return superFastHash([]byte(url))
+}
+
+// GetAddr does a lookup for CacheAddr from hash.
+func GetAddr(hash uint32) CacheAddr {
+	return cacheAddr[hash]
+}
