@@ -6,26 +6,29 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"path"
 )
 
 // ErrNotFound is returned when an entry is not found in cache.
-var ErrNotFound = errors.New("entry not found")
+var ErrNotFound = errors.New("cdc: entry not found")
 
 // ErrBadAddr is returned if the addr is not initialized.
-var ErrBadAddr = errors.New("addr is not initialized")
+var ErrBadAddr = errors.New("cdc: addr is not initialized")
 
 // OpenURL returns the EntryStore for url.
 func OpenURL(url string) (*EntryStore, error) {
-	hash := superFastHash([]byte(url))
+	log.Printf("openurl %q\n", url)
+	hash := Hash(url)
 	return OpenHash(hash)
 }
 
 // OpenHash returns the EntryStore for hash.
 func OpenHash(hash uint32) (*EntryStore, error) {
 	addr, ok := cacheAddr[hash]
+	log.Printf("openhash %08x\n", hash)
 	if !ok {
 		return nil, ErrNotFound
 	}
@@ -99,6 +102,9 @@ func (e EntryStore) OpenHeader() (http.Header, error) {
 // OpenBody returns the response body.
 func (e EntryStore) OpenBody() (io.ReadCloser, error) {
 	size, addr := e.DataSize[1], e.DataAddr[1]
+	if !addr.Initialized() {
+		return nil, ErrBadAddr
+	}
 
 	if addr.SeparateFile() {
 		name := path.Join(cacheDir, addr.FileName())

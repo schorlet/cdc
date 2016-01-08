@@ -14,12 +14,13 @@ import (
 )
 
 var (
-	aUrl  = flag.String("url", "", "url")
+	aURL  = flag.String("url", "", "url")
 	aHash = flag.String("hash", "", "hash")
 	aAddr = flag.String("addr", "", "addr")
 )
 
 func printUsage() {
+	log.SetFlags(0)
 	log.Fatal(`Usage: client [OPTION] CACHEDIR
 CACHEDIR is the path to chromium cache directory.
 OPTION include:
@@ -48,8 +49,8 @@ func main() {
 			fmt.Println(url)
 		}
 
-	} else if *aUrl != "" {
-		printUrl(*aUrl)
+	} else if *aURL != "" {
+		printURL(*aURL)
 
 	} else if *aHash != "" {
 		hash, err := strconv.ParseUint(*aHash, 16, 32)
@@ -67,7 +68,7 @@ func main() {
 	}
 }
 
-func printUrl(key string) {
+func printURL(key string) {
 	printHash(cdc.Hash(key))
 }
 
