@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>cdc</title>
+    </head>
+    <body style="margin: 0 auto; max-width:80%;">
+        <header>
+            <h1 style="text-align:center;">cdc</h1>
+        </header>
+
+{{ with .Urls }}
+    {{ range $value := . }}
+        <div><a href="/?view={{ $value }}">{{ $value }}</a></div>
+    {{ end }}
+{{ else }}
+    {{ range $key, $_ := .Hosts }}
+        <div><a href="/?host={{ $key }}">{{ $key }}</a></div>
+    {{ end }}
+{{ end }}
+
+        <br/>
+    </body>
+</html>
