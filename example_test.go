@@ -7,9 +7,10 @@ import (
 	"log"
 	"os"
 
-	"cdc"
+	"github.com/schorlet/cdc"
 )
 
+// Example gets an entry from the cache and prints the header and body to stdout.
 func Example() {
 	err := cdc.Init("cache")
 	if err != nil {

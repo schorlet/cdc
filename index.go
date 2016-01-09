@@ -67,7 +67,6 @@ func initMaps(dir string) error {
 		}
 		initCacheEntry(*addr)
 	}
-
 	return err
 }
 
@@ -83,16 +82,13 @@ func initCacheEntry(addr CacheAddr) {
 	}
 }
 
-// Urls returns an iterator over all the URL in cache.
-func Urls() <-chan string {
-	ch := make(chan string)
-	go func() {
-		for _, val := range cacheKey {
-			ch <- val
-		}
-		close(ch)
-	}()
-	return ch
+// Urls returns all the URL in cache.
+func Urls() []string {
+	urls := make([]string, 0, len(cacheKey))
+	for _, value := range cacheKey {
+		urls = append(urls, value)
+	}
+	return urls
 }
 
 // Hash returns the url hash.

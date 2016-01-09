@@ -10,7 +10,7 @@ import (
 	"os"
 	"strconv"
 
-	"cdc"
+	"github.com/schorlet/cdc"
 )
 
 var (
@@ -45,7 +45,7 @@ func main() {
 	}
 
 	if flag.NFlag() == 0 {
-		for url := range cdc.Urls() {
+		for _, url := range cdc.Urls() {
 			fmt.Println(url)
 		}
 

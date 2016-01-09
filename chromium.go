@@ -117,7 +117,7 @@ type EntryStore struct {
 	Key          [kBlockKeyLen]byte // null terminated
 }
 
-// URL returns the Key as a string.
+// URL returns e.Key as a string.
 func (e EntryStore) URL() string {
 	var key []byte
 	if e.LongKey == 0 {

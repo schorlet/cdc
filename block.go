@@ -6,7 +6,6 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"path"
@@ -20,7 +19,6 @@ var ErrBadAddr = errors.New("cdc: addr is not initialized")
 
 // OpenURL returns the EntryStore for url.
 func OpenURL(url string) (*EntryStore, error) {
-	log.Printf("openurl %q\n", url)
 	hash := Hash(url)
 	return OpenHash(hash)
 }
@@ -28,7 +26,6 @@ func OpenURL(url string) (*EntryStore, error) {
 // OpenHash returns the EntryStore for hash.
 func OpenHash(hash uint32) (*EntryStore, error) {
 	addr, ok := cacheAddr[hash]
-	log.Printf("openhash %08x\n", hash)
 	if !ok {
 		return nil, ErrNotFound
 	}

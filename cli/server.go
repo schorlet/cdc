@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"os"
 
-	"cdc"
+	"github.com/schorlet/cdc"
 )
 
 // indexHandler handles all requests.
@@ -173,7 +173,7 @@ func initCache(name string) {
 	cacheHost = make(map[string]bool)
 	cacheURL = make(map[string][]string)
 
-	for ustr := range cdc.Urls() {
+	for _, ustr := range cdc.Urls() {
 		u, err := url.Parse(ustr)
 		if err != nil {
 			continue
@@ -185,7 +185,6 @@ func initCache(name string) {
 			cacheURL[u.Host] = append(cacheURL[u.Host], ustr)
 		}
 	}
-	log.Printf("hosts count: %d\n", len(cacheHost))
 }
 
 func main() {
@@ -200,6 +199,7 @@ CACHEDIR is the path to chromium cache directory.`)
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/favicon.ico", http.NotFound)
 	http.HandleFunc("/favicon.png", http.NotFound)
+	http.HandleFunc("/opensearch.xml", http.NotFound)
 
 	err := http.ListenAndServe(":8000", nil)
 	if err != nil {
