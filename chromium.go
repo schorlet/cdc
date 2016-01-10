@@ -141,26 +141,6 @@ func (e EntryStore) String() string {
 // CacheAddr defines a storage address for a cache record.
 type CacheAddr uint32
 
-// Format handles 'x' formating or defaults to 's'.
-func (value CacheAddr) Format(f fmt.State, c rune) {
-	if c == 'x' || c == 'X' {
-		fmt.Fprintf(f, "%08x", uint32(value))
-		return
-	}
-	fmt.Fprintf(f, "%s", value.String())
-}
-
-func (value CacheAddr) String() string {
-	if !value.Initialized() {
-		return fmt.Sprintf("CacheAddr:%08x not initialized", uint32(value))
-	}
-	if value.SeparateFile() {
-		return fmt.Sprintf("CacheAddr:%08x f_%06x", uint32(value), value.FileNumber())
-	}
-	return fmt.Sprintf("CacheAddr:%08x Type:%d FileNumber:%x StartBlock:%x NumBlocks:%d",
-		uint32(value), value.FileType(), value.FileNumber(), value.StartBlock(), value.NumBlocks())
-}
-
 const kInitializedMask uint32 = 0x80000000
 const kFileTypeMask uint32 = 0x70000000
 const kFileTypeOffset uint32 = 28
