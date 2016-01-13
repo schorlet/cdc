@@ -57,6 +57,7 @@ func handleHost(w http.ResponseWriter, r *http.Request, host string) {
 		data.Urls = cacheURL[host]
 	}
 
+	w.Header().Set("Cache-Control", "no-cache, no-store")
 	t.Execute(w, data)
 }
 
@@ -100,6 +101,7 @@ func handleView(w http.ResponseWriter, r *http.Request, view string) {
 		}
 	}
 
+	w.Header().Set("Cache-Control", "no-cache, no-store")
 	io.Copy(w, body)
 }
 
