@@ -189,11 +189,19 @@ func initCache(name string) {
 	}
 }
 
+const usage = `cdcd is a webapp for reading Chromium disk cache v2.
+
+Usage:
+
+    cdcd CACHEDIR
+
+CACHEDIR is the path to the chromium cache directory.
+`
+
 func main() {
 	if len(os.Args) != 2 {
 		log.SetFlags(0)
-		log.Fatal(`Usage: server CACHEDIR
-CACHEDIR is the path to chromium cache directory.`)
+		log.Fatal(usage)
 	}
 
 	initCache(os.Args[1])

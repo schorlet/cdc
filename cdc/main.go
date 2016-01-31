@@ -11,7 +11,7 @@ import (
 	"github.com/schorlet/cdc"
 )
 
-const usage = `cdc is a tool for for reading Chromium disk cache v2.
+const usage = `cdc is a tool for reading Chromium disk cache v2.
 
 Usage:
 
