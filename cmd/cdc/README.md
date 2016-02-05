@@ -4,7 +4,7 @@ cdc client
 ### List all entries
 
 ```sh
-$ go run main.go list ../testcache/
+$ go run main.go list ../../testcache/
 https://golang.org/lib/godoc/jquery.treeview.edit.js
 https://golang.org/lib/godoc/playground.js
 https://golang.org/pkg/os/
@@ -29,14 +29,14 @@ https://golang.org/lib/godoc/jquery.treeview.css
 ### Print entry info
 
 ```sh
-$ go run main.go info -url https://golang.org/doc/gopher/pkg.png ../testcache/
+$ go run main.go info -url https://golang.org/doc/gopher/pkg.png ../../testcache/
 Hash:6cc46ffd Next:0 RankingsNode:90000003 ReuseCount:0 RefetchCount:0 State:0 CreationTime:13096853902296629 KeyLen:37 LongKey:0 DataSize:[6912 5409 0 0] DataAddr:[c103000a c103000c 0 0] Flags:0 SelfHash:e10f47ed Key:https://golang.org/doc/gopher/pkg.png
 ```
 
 ### Print entry header
 
 ```sh
-$ go run main.go header -hash 6cc46ffd ../testcache/
+$ go run main.go header -hash 6cc46ffd ../../testcache/
 Alternate-Protocol: 443:quic,p=1
 Content-Length: 5409
 Last-Modified: Mon, 07 Dec 2015 14:14:26 GMT
@@ -51,7 +51,7 @@ Content-Type: image/png
 ### Print entry body
 
 ```sh
-$ go run main.go body -hash 6cc46ffd ../testcache/ | file -
+$ go run main.go body -hash 6cc46ffd ../../testcache/ | file -
 /dev/stdin: PNG image data, 83 x 120, 8-bit grayscale, non-interlaced
 ```
 
