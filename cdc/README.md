@@ -48,4 +48,10 @@ Alt-Svc: quic=":443"; ma=604800; v="30,29,28,27,26,25"
 Content-Type: image/png
 ```
 
+### Print entry body
+
+```sh
+$ go run main.go body -hash 6cc46ffd ../testcache/ | file -
+/dev/stdin: PNG image data, 83 x 120, 8-bit grayscale, non-interlaced
+```
 
