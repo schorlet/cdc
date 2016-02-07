@@ -55,3 +55,10 @@ $ go run main.go body -hash 6cc46ffd ../../testcache/ | file -
 /dev/stdin: PNG image data, 83 x 120, 8-bit grayscale, non-interlaced
 ```
 
+```sh
+$ go run main.go body -hash 6cc46ffd ../../testcache/ | hexdump -C -n 32
+00000000  89 50 4e 47 0d 0a 1a 0a  00 00 00 0d 49 48 44 52  |.PNG........IHDR|
+00000010  00 00 00 53 00 00 00 78  08 00 00 00 00 ab b2 91  |...S...x........|
+00000020
+```
+
