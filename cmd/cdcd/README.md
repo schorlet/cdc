@@ -3,7 +3,7 @@ cdc webapp
 
 ### Intro
 
-Being off from internet access for one week, I needed to read some documentation to be able to work on a project. Looking at the [chrome cache](chrome://view-http-cache) I knew that what I wanted to read was there, locally available.
+Being off from internet access for one week, I needed to read some documentation to be able to work on a project. Looking at the `chrome://view-http-cache` I knew that what I wanted to read was there, locally available.
 
 Actually chrome browser shows its cache as a canonical hex+ASCII display. So you have to copy the content, decode the input, eventually decompress it, and finally you can read the ouptput.
 
