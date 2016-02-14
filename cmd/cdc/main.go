@@ -69,7 +69,7 @@ func main() {
 
 	// exec
 	if command == "list" {
-		for _, url := range cdc.Urls() {
+		for _, url := range cdc.URLs() {
 			fmt.Println(url)
 		}
 
@@ -95,7 +95,7 @@ func main() {
 }
 
 func printHeader(entry *cdc.EntryStore) {
-	header, err := entry.OpenHeader()
+	header, err := entry.Header()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -105,7 +105,7 @@ func printHeader(entry *cdc.EntryStore) {
 }
 
 func printBody(entry *cdc.EntryStore) {
-	body, err := entry.OpenBody()
+	body, err := entry.Body()
 	if err != nil {
 		log.Fatal(err)
 	}

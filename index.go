@@ -82,8 +82,8 @@ func initCacheEntry(addr CacheAddr) {
 	}
 }
 
-// Urls returns all the URL in cache.
-func Urls() []string {
+// URLs returns all the URLs currently stored.
+func URLs() []string {
 	urls := make([]string, 0, len(cacheKey))
 	for _, value := range cacheKey {
 		urls = append(urls, value)

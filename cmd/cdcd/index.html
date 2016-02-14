@@ -9,7 +9,7 @@
             <h1 style="text-align:center;">cdc</h1>
         </header>
 
-{{ with .Urls }}
+{{ with .URLs }}
     {{ range $value := . }}
         <div><a href="/?view={{ $value }}">{{ $value }}</a></div>
     {{ end }}

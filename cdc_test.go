@@ -12,7 +12,7 @@ func TestBasic(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for _, url := range cdc.Urls() {
+	for _, url := range cdc.URLs() {
 		entry, err := cdc.OpenURL(url)
 		if err != nil {
 			t.Fatal(err)
@@ -24,7 +24,7 @@ func TestBasic(t *testing.T) {
 			continue
 		}
 
-		header, err := entry.OpenHeader()
+		header, err := entry.Header()
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -33,7 +33,7 @@ func TestBasic(t *testing.T) {
 			continue
 		}
 
-		body, err := entry.OpenBody()
+		body, err := entry.Body()
 		if err != nil {
 			t.Fatal(err)
 		}

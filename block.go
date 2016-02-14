@@ -33,7 +33,7 @@ func OpenHash(hash uint32) (*EntryStore, error) {
 }
 
 func openAddr(addr CacheAddr) (*EntryStore, error) {
-	b, err := ReadAddr(addr)
+	b, err := addr.ReadAll()
 	if err != nil {
 		return nil, err
 	}
@@ -45,8 +45,8 @@ func openAddr(addr CacheAddr) (*EntryStore, error) {
 	return entry, err
 }
 
-// OpenHeader returns the HTTP header.
-func (e EntryStore) OpenHeader() (http.Header, error) {
+// Header returns the HTTP header.
+func (e EntryStore) Header() (http.Header, error) {
 	var (
 		infoSize     int32
 		flag         int32
@@ -96,8 +96,8 @@ func (e EntryStore) OpenHeader() (http.Header, error) {
 	return header, nil
 }
 
-// OpenBody returns the response body.
-func (e EntryStore) OpenBody() (io.ReadCloser, error) {
+// Body returns the response body.
+func (e EntryStore) Body() (io.ReadCloser, error) {
 	size, addr := e.DataSize[1], e.DataAddr[1]
 	if !addr.Initialized() {
 		return nil, ErrBadAddr
@@ -116,9 +116,9 @@ func (e EntryStore) OpenBody() (io.ReadCloser, error) {
 	return ioutil.NopCloser(reader), nil
 }
 
-// ReadAddr reads the cache at addr.
+// ReadAll reads the cache at addr.
 // The len of the returned byte array will be addr.BlockSize() * addr.NumBlocks().
-func ReadAddr(addr CacheAddr) ([]byte, error) {
+func (addr CacheAddr) ReadAll() ([]byte, error) {
 	if !addr.Initialized() {
 		return nil, ErrBadAddr
 	}

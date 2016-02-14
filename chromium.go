@@ -35,10 +35,10 @@ type IndexHeader struct {
 	Lru        [28]int32 // Eviction control data.
 }
 
-func (h IndexHeader) String() string {
-	return fmt.Sprintf("Magic:%x Version:%x NumEntries:%d NumBytes:%d LastFile:%d ThisID:%d TableLen:%d",
-		h.Magic, h.Version, h.NumEntries, h.NumBytes, h.LastFile, h.ThisID, h.TableLen)
-}
+// func (h IndexHeader) String() string {
+// return fmt.Sprintf("Magic:%x Version:%x NumEntries:%d NumBytes:%d LastFile:%d ThisID:%d TableLen:%d",
+// h.Magic, h.Version, h.NumEntries, h.NumBytes, h.LastFile, h.ThisID, h.TableLen)
+// }
 
 const kBlockHeaderSize int = 8192 // Two pages: almost 64k entries
 const kMaxBlocks int = (kBlockHeaderSize - 80) * 8
@@ -61,10 +61,10 @@ type BlockFileHeader struct {
 	AllocationMap [kMaxBlocks / 32]uint32 // 2028, to track used blocks on a block-file.
 }
 
-func (h BlockFileHeader) String() string {
-	return fmt.Sprintf("Magic:%x Version:%x ThisFile:%d NextFile:%d EntrySize:%d NumEntries:%d MaxEntries:%d Updating:%d",
-		h.Magic, h.Version, h.ThisFile, h.NextFile, h.EntrySize, h.NumEntries, h.MaxEntries, h.Updating)
-}
+// func (h BlockFileHeader) String() string {
+// return fmt.Sprintf("Magic:%x Version:%x ThisFile:%d NextFile:%d EntrySize:%d NumEntries:%d MaxEntries:%d Updating:%d",
+// h.Magic, h.Version, h.ThisFile, h.NextFile, h.EntrySize, h.NumEntries, h.MaxEntries, h.Updating)
+// }
 
 // Rankings information for a given entry.
 // type RankingsNode struct {

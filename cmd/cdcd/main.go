@@ -48,13 +48,13 @@ func handleHost(w http.ResponseWriter, r *http.Request, host string) {
 
 	var data struct {
 		Hosts map[string]bool
-		Urls  []string
+		URLs  []string
 	}
 
 	if len(host) == 0 {
 		data.Hosts = cacheHost
 	} else {
-		data.Urls = cacheURL[host]
+		data.URLs = cacheURL[host]
 	}
 
 	w.Header().Set("Cache-Control", "no-cache, no-store")
@@ -69,7 +69,7 @@ func handleView(w http.ResponseWriter, r *http.Request, view string) {
 		return
 	}
 
-	header, err := entry.OpenHeader()
+	header, err := entry.Header()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -86,7 +86,7 @@ func handleView(w http.ResponseWriter, r *http.Request, view string) {
 		return
 	}
 
-	body, err := entry.OpenBody()
+	body, err := entry.Body()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -175,7 +175,7 @@ func initCache(name string) {
 	cacheHost = make(map[string]bool)
 	cacheURL = make(map[string][]string)
 
-	for _, ustr := range cdc.Urls() {
+	for _, ustr := range cdc.URLs() {
 		u, err := url.Parse(ustr)
 		if err != nil {
 			continue
