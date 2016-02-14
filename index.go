@@ -65,13 +65,13 @@ func initMaps(dir string) error {
 		if err != nil {
 			break
 		}
-		initCacheEntry(*addr)
+		addEntry(*addr)
 	}
 	return err
 }
 
-func initCacheEntry(addr CacheAddr) {
-	entry, err := openAddr(addr)
+func addEntry(addr CacheAddr) {
+	entry, err := OpenAddr(addr)
 	if err == nil &&
 		entry.State == 0 &&
 		// KeyLen may be larger, not managed
@@ -91,12 +91,9 @@ func URLs() []string {
 	return urls
 }
 
-// Hash returns the url hash.
-func Hash(url string) uint32 {
-	return superFastHash([]byte(url))
-}
-
 // GetAddr does a lookup for CacheAddr from hash.
+// The return CacheAddr may be not initialized,
+// meaning that the hash is invalid.
 func GetAddr(hash uint32) CacheAddr {
 	return cacheAddr[hash]
 }

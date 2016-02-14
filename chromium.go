@@ -149,14 +149,14 @@ const kFileSelectorMask uint32 = 0x00ff0000
 const kFileSelectorOffset uint32 = 16
 
 // Initialized returns the initialization state.
-func (value CacheAddr) Initialized() bool {
-	return (uint32(value) & kInitializedMask) != 0
+func (addr CacheAddr) Initialized() bool {
+	return (uint32(addr) & kInitializedMask) != 0
 }
 
 // SeparateFile returns true if the cache record
 // is located in a separated file.
-func (value CacheAddr) SeparateFile() bool {
-	return (uint32(value) & kFileTypeMask) == 0
+func (addr CacheAddr) SeparateFile() bool {
+	return (uint32(addr) & kFileTypeMask) == 0
 }
 
 // FileType returns one of these values:
@@ -168,26 +168,26 @@ func (value CacheAddr) SeparateFile() bool {
 //  BLOCK_FILES = 5,
 //  BLOCK_ENTRIES = 6,
 //  BLOCK_EVICTED = 7
-func (value CacheAddr) FileType() uint32 {
-	return (uint32(value) & kFileTypeMask) >> kFileTypeOffset
+func (addr CacheAddr) FileType() uint32 {
+	return (uint32(addr) & kFileTypeMask) >> kFileTypeOffset
 }
 
 // FileNumber returns the file number.
-func (value CacheAddr) FileNumber() uint32 {
-	if value.SeparateFile() {
-		return uint32(value) & kFileNameMask
+func (addr CacheAddr) FileNumber() uint32 {
+	if addr.SeparateFile() {
+		return uint32(addr) & kFileNameMask
 	}
-	return (uint32(value) & kFileSelectorMask) >> kFileSelectorOffset
+	return (uint32(addr) & kFileSelectorMask) >> kFileSelectorOffset
 }
 
 // FileName returns the file name.
-func (value CacheAddr) FileName() (name string) {
-	if !value.Initialized() {
+func (addr CacheAddr) FileName() (name string) {
+	if !addr.Initialized() {
 		// ""
-	} else if value.SeparateFile() {
-		name = fmt.Sprintf("f_%06x", value.FileNumber())
+	} else if addr.SeparateFile() {
+		name = fmt.Sprintf("f_%06x", addr.FileNumber())
 	} else {
-		name = fmt.Sprintf("data_%d", value.FileNumber())
+		name = fmt.Sprintf("data_%d", addr.FileNumber())
 	}
 	return
 }
@@ -197,16 +197,16 @@ const kNumBlocksMask uint32 = 0x03000000
 const kNumBlocksOffset uint32 = 24
 
 // StartBlock returns the start block.
-func (value CacheAddr) StartBlock() uint32 {
-	if value.SeparateFile() {
+func (addr CacheAddr) StartBlock() uint32 {
+	if addr.SeparateFile() {
 		return 0
 	}
-	return uint32(value) & kStartBlockMask
+	return uint32(addr) & kStartBlockMask
 }
 
 // BlockSize returns the block size.
-func (value CacheAddr) BlockSize() uint32 {
-	switch value.FileType() {
+func (addr CacheAddr) BlockSize() uint32 {
+	switch addr.FileType() {
 	case 1: // RANKINGS
 		return 36
 	case 2: // BLOCK_256
@@ -226,11 +226,11 @@ func (value CacheAddr) BlockSize() uint32 {
 }
 
 // NumBlocks returns the number of blocks.
-func (value CacheAddr) NumBlocks() uint32 {
-	if value.SeparateFile() {
+func (addr CacheAddr) NumBlocks() uint32 {
+	if addr.SeparateFile() {
 		return 0
 	}
-	return ((uint32(value) & kNumBlocksMask) >> kNumBlocksOffset) + 1
+	return ((uint32(addr) & kNumBlocksMask) >> kNumBlocksOffset) + 1
 }
 
 func init() {

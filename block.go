@@ -17,6 +17,11 @@ var ErrNotFound = errors.New("cdc: entry not found")
 // ErrBadAddr is returned if the addr is not initialized.
 var ErrBadAddr = errors.New("cdc: addr is not initialized")
 
+// Hash returns the url hash.
+func Hash(url string) uint32 {
+	return superFastHash([]byte(url))
+}
+
 // OpenURL returns the EntryStore for url.
 func OpenURL(url string) (*EntryStore, error) {
 	hash := Hash(url)
@@ -29,10 +34,11 @@ func OpenHash(hash uint32) (*EntryStore, error) {
 	if !ok {
 		return nil, ErrNotFound
 	}
-	return openAddr(addr)
+	return OpenAddr(addr)
 }
 
-func openAddr(addr CacheAddr) (*EntryStore, error) {
+// OpenAddr returns the EntryStore for addr.
+func OpenAddr(addr CacheAddr) (*EntryStore, error) {
 	b, err := addr.ReadAll()
 	if err != nil {
 		return nil, err
@@ -116,7 +122,7 @@ func (e EntryStore) Body() (io.ReadCloser, error) {
 	return ioutil.NopCloser(reader), nil
 }
 
-// ReadAll reads the cache at addr.
+// ReadAll reads the data block at addr.
 // The len of the returned byte array will be addr.BlockSize() * addr.NumBlocks().
 func (addr CacheAddr) ReadAll() ([]byte, error) {
 	if !addr.Initialized() {
