@@ -150,7 +150,7 @@ func readAddrSize(addr CacheAddr, size uint32) ([]byte, error) {
 	}
 	defer file.Close()
 
-	offset := addr.StartBlock()*addr.BlockSize() + uint32(kBlockHeaderSize)
+	offset := addr.StartBlock()*addr.BlockSize() + uint32(blockHeaderSize)
 	block := make([]byte, size)
 
 	_, err = file.ReadAt(block, int64(offset))

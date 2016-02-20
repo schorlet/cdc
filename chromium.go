@@ -18,6 +18,24 @@ import (
 	"log"
 )
 
+// BlockFileHeader
+const blockHeaderSize int = 8192
+const maxBlocks int = (blockHeaderSize - 80) * 8
+
+// EntryStore
+const blockKeyLen int32 = 256 - 24*4
+
+// CacheAddr
+const initializedMask uint32 = 0x80000000
+const fileTypeMask uint32 = 0x70000000
+const fileTypeOffset uint32 = 28
+const fileNameMask uint32 = 0x0fffffff
+const fileSelectorMask uint32 = 0x00ff0000
+const fileSelectorOffset uint32 = 16
+const startBlockMask uint32 = 0x0000ffff
+const numBlocksMask uint32 = 0x03000000
+const numBlocksOffset uint32 = 24
+
 // IndexHeader for the master index file.
 type IndexHeader struct {
 	Magic      uint32
@@ -35,14 +53,6 @@ type IndexHeader struct {
 	Lru        [28]int32 // Eviction control data.
 }
 
-// func (h IndexHeader) String() string {
-// return fmt.Sprintf("Magic:%x Version:%x NumEntries:%d NumBytes:%d LastFile:%d ThisID:%d TableLen:%d",
-// h.Magic, h.Version, h.NumEntries, h.NumBytes, h.LastFile, h.ThisID, h.TableLen)
-// }
-
-const kBlockHeaderSize int = 8192 // Two pages: almost 64k entries
-const kMaxBlocks int = (kBlockHeaderSize - 80) * 8
-
 // BlockFileHeader is the header of a block-file.
 // A block-file is the file used to store information in blocks (could be
 // EntryStore blocks, RankingsNode blocks or user-data blocks).
@@ -58,26 +68,8 @@ type BlockFileHeader struct {
 	Hints         [4]int32 // Last used position for each entry type.
 	Updating      int32    // Keep track of updates to the header.
 	User          [5]int32
-	AllocationMap [kMaxBlocks / 32]uint32 // 2028, to track used blocks on a block-file.
+	AllocationMap [maxBlocks / 32]uint32 // 2028, to track used blocks on a block-file.
 }
-
-// func (h BlockFileHeader) String() string {
-// return fmt.Sprintf("Magic:%x Version:%x ThisFile:%d NextFile:%d EntrySize:%d NumEntries:%d MaxEntries:%d Updating:%d",
-// h.Magic, h.Version, h.ThisFile, h.NextFile, h.EntrySize, h.NumEntries, h.MaxEntries, h.Updating)
-// }
-
-// Rankings information for a given entry.
-// type RankingsNode struct {
-// LastUsed     uint64    // LRU info.
-// LastModified uint64    // LRU info.
-// Next         CacheAddr // LRU list.
-// Prev         CacheAddr // LRU list.
-// Contents     CacheAddr // Address of the EntryStore.
-// Dirty        int32     // The entry is being modifyied.
-// SelfHash     uint32    // RankingsNode's hash.
-// }
-
-const kBlockKeyLen int32 = 256 - 24*4
 
 // EntryStore is the main structure for an entry on the backing storage.
 //
@@ -113,15 +105,15 @@ type EntryStore struct {
 	DataAddr     [4]CacheAddr // entry.
 	Flags        uint32       // Any combination of EntryFlags.
 	Pad          [4]int32
-	SelfHash     uint32             // The hash of EntryStore up to this point.
-	Key          [kBlockKeyLen]byte // null terminated
+	SelfHash     uint32            // The hash of EntryStore up to this point.
+	Key          [blockKeyLen]byte // null terminated
 }
 
 // URL returns e.Key as a string.
 func (e EntryStore) URL() string {
 	var key []byte
 	if e.LongKey == 0 {
-		if e.KeyLen <= kBlockKeyLen {
+		if e.KeyLen <= blockKeyLen {
 			key = e.Key[0:e.KeyLen]
 		} else {
 			// KeyLen may be larger, return trimmed
@@ -141,22 +133,15 @@ func (e EntryStore) String() string {
 // CacheAddr defines a storage address for a cache record.
 type CacheAddr uint32
 
-const kInitializedMask uint32 = 0x80000000
-const kFileTypeMask uint32 = 0x70000000
-const kFileTypeOffset uint32 = 28
-const kFileNameMask uint32 = 0x0fffffff
-const kFileSelectorMask uint32 = 0x00ff0000
-const kFileSelectorOffset uint32 = 16
-
 // Initialized returns the initialization state.
 func (addr CacheAddr) Initialized() bool {
-	return (uint32(addr) & kInitializedMask) != 0
+	return (uint32(addr) & initializedMask) != 0
 }
 
 // SeparateFile returns true if the cache record
 // is located in a separated file.
 func (addr CacheAddr) SeparateFile() bool {
-	return (uint32(addr) & kFileTypeMask) == 0
+	return (uint32(addr) & fileTypeMask) == 0
 }
 
 // FileType returns one of these values:
@@ -169,15 +154,15 @@ func (addr CacheAddr) SeparateFile() bool {
 //  BLOCK_ENTRIES = 6,
 //  BLOCK_EVICTED = 7
 func (addr CacheAddr) FileType() uint32 {
-	return (uint32(addr) & kFileTypeMask) >> kFileTypeOffset
+	return (uint32(addr) & fileTypeMask) >> fileTypeOffset
 }
 
 // FileNumber returns the file number.
 func (addr CacheAddr) FileNumber() uint32 {
 	if addr.SeparateFile() {
-		return uint32(addr) & kFileNameMask
+		return uint32(addr) & fileNameMask
 	}
-	return (uint32(addr) & kFileSelectorMask) >> kFileSelectorOffset
+	return (uint32(addr) & fileSelectorMask) >> fileSelectorOffset
 }
 
 // FileName returns the file name.
@@ -192,16 +177,12 @@ func (addr CacheAddr) FileName() (name string) {
 	return
 }
 
-const kStartBlockMask uint32 = 0x0000ffff
-const kNumBlocksMask uint32 = 0x03000000
-const kNumBlocksOffset uint32 = 24
-
 // StartBlock returns the start block.
 func (addr CacheAddr) StartBlock() uint32 {
 	if addr.SeparateFile() {
 		return 0
 	}
-	return uint32(addr) & kStartBlockMask
+	return uint32(addr) & startBlockMask
 }
 
 // BlockSize returns the block size.
@@ -230,7 +211,7 @@ func (addr CacheAddr) NumBlocks() uint32 {
 	if addr.SeparateFile() {
 		return 0
 	}
-	return ((uint32(addr) & kNumBlocksMask) >> kNumBlocksOffset) + 1
+	return ((uint32(addr) & numBlocksMask) >> numBlocksOffset) + 1
 }
 
 func init() {
@@ -240,7 +221,7 @@ func init() {
 	}
 
 	bh := new(BlockFileHeader)
-	if n := binary.Size(bh); n != kBlockHeaderSize {
+	if n := binary.Size(bh); n != blockHeaderSize {
 		log.Fatal("BlockFileHeader size error:", n)
 	}
 

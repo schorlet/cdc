@@ -75,7 +75,7 @@ func addEntry(addr CacheAddr) {
 	if err == nil &&
 		entry.State == 0 &&
 		// KeyLen may be larger, not managed
-		entry.KeyLen <= kBlockKeyLen {
+		entry.KeyLen <= blockKeyLen {
 
 		cacheAddr[entry.Hash] = addr
 		cacheKey[entry.Hash] = entry.URL()
