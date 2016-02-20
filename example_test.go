@@ -8,18 +8,18 @@ import (
 	"github.com/schorlet/cdc"
 )
 
-// Example gets an entry from the cache and prints informations to stdout.
+// Example gets an entry from the cache and prints to stdout.
 func Example() {
-	err := cdc.Init("testcache")
+	cache, err := cdc.OpenCache("testcache")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	entry, err := cdc.OpenURL("https://golang.org/doc/gopher/pkg.png")
+	entry, err := cache.OpenURL("https://golang.org/doc/gopher/pkg.png")
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(entry)
+	fmt.Println(entry.URL())
 
 	header, err := entry.Header()
 	if err != nil {
@@ -42,7 +42,7 @@ func Example() {
 	fmt.Printf("PNG image data, %d x %d\n", config.Width, config.Height)
 
 	// Output:
-	// Hash:6cc46ffd Next:0 RankingsNode:90000003 ReuseCount:0 RefetchCount:0 State:0 CreationTime:13096853902296629 KeyLen:37 LongKey:0 DataSize:[6912 5409 0 0] DataAddr:[c103000a c103000c 0 0] Flags:0 SelfHash:e10f47ed Key:https://golang.org/doc/gopher/pkg.png
+	// https://golang.org/doc/gopher/pkg.png
 	// Status: 200
 	// Content-Length: 5409
 	// Content-Type: image/png
