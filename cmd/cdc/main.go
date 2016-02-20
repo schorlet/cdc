@@ -20,13 +20,12 @@ Usage:
 The commands are:
 
     list        list entries
-    info        print entry info
     header      print entry header
     body        print entry body
 
 The arguments are:
     -url string        entry url
-    -hash string       entry hash
+    -addr string       entry addr
 
 CACHEDIR is the path to the chromium cache directory.
 `
@@ -53,7 +52,7 @@ func main() {
 	cmdline := flag.NewFlagSet("", flag.ExitOnError)
 	cmdline.Usage = printUsage
 	aURL := cmdline.String("url", "", "entry url")
-	aHash := cmdline.String("hash", "", "entry hash")
+	aAddr := cmdline.String("addr", "", "entry addr")
 
 	cmdline.Parse(os.Args[2:])
 	if cmdline.NArg() != 1 {
@@ -62,29 +61,40 @@ func main() {
 
 	// init
 	dir := cmdline.Arg(0)
-	err := cdc.Init(dir)
+	cache, err := cdc.OpenCache(dir)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// exec
 	if command == "list" {
-		for _, url := range cdc.URLs() {
-			fmt.Println(url)
+		for _, url := range cache.URLs() {
+			addr := cache.GetAddr(url)
+			fmt.Println(addr, url)
 		}
 
 	} else if cmdline.NFlag() != 1 {
 		printUsage()
 
 	} else {
-		entry, err := getEntry(*aURL, *aHash)
+		var entry *cdc.Entry
+
+		if *aURL != "" {
+			entry, err = cache.OpenURL(*aURL)
+
+		} else if *aAddr != "" {
+			addr, era := strconv.ParseUint(*aAddr, 10, 32)
+			if era != nil {
+				log.Fatal(era)
+			}
+			entry, err = cdc.OpenEntry(cdc.CacheAddr(addr), dir)
+		}
+
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		if command == "info" {
-			fmt.Println(entry)
-		} else if command == "header" {
+		if command == "header" {
 			printHeader(entry)
 		} else if command == "body" {
 			printBody(entry)
@@ -94,7 +104,7 @@ func main() {
 	}
 }
 
-func printHeader(entry *cdc.EntryStore) {
+func printHeader(entry *cdc.Entry) {
 	header, err := entry.Header()
 	if err != nil {
 		log.Fatal(err)
@@ -104,7 +114,7 @@ func printHeader(entry *cdc.EntryStore) {
 	}
 }
 
-func printBody(entry *cdc.EntryStore) {
+func printBody(entry *cdc.Entry) {
 	body, err := entry.Body()
 	if err != nil {
 		log.Fatal(err)
@@ -112,19 +122,4 @@ func printBody(entry *cdc.EntryStore) {
 	defer body.Close()
 
 	io.Copy(os.Stdout, body)
-}
-
-func getEntry(url, hash string) (*cdc.EntryStore, error) {
-	if url != "" {
-		h := cdc.Hash(url)
-		return cdc.OpenHash(h)
-
-	} else if hash != "" {
-		h, err := strconv.ParseUint(hash, 16, 32)
-		if err != nil {
-			return nil, err
-		}
-		return cdc.OpenHash(uint32(h))
-	}
-	return nil, fmt.Errorf("empty args")
 }
