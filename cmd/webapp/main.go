@@ -193,11 +193,11 @@ func assetView(r *http.Request) (v string) {
 	return
 }
 
-const usage = `cdcd is a webapp for reading Chromium disk cache v2.
+const usage = `this is a webapp for reading Chromium disk cache v2.
 
 Usage:
 
-    cdcd CACHEDIR
+    go run main.go CACHEDIR
 
 CACHEDIR is the path to the chromium cache directory.
 `
