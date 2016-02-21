@@ -1,9 +1,11 @@
-package main
+package main_test
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"image/png"
+	"io"
 	"log"
 	"os/exec"
 	"sort"
@@ -21,7 +23,7 @@ func ExampleList() {
 
 	lines := read(output)
 	for _, line := range lines {
-		fmt.Print(line)
+		fmt.Println(line)
 	}
 
 	// Output:
@@ -58,7 +60,7 @@ func ExampleHeader() {
 
 	lines := read(output)
 	for _, line := range lines {
-		fmt.Print(line)
+		fmt.Println(line)
 	}
 
 	// Output:
@@ -92,12 +94,12 @@ func ExampleBody() {
 	// PNG image data, 83 x 120
 }
 
-func read(buf *bytes.Buffer) []string {
+func read(r io.Reader) []string {
 	lines := make([]string, 0)
-	line, err := buf.ReadString('\n')
-	for err == nil {
-		lines = append(lines, line)
-		line, err = buf.ReadString('\n')
+
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
 	}
 
 	sort.Strings(lines)

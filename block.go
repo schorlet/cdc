@@ -12,10 +12,10 @@ import (
 )
 
 // ErrNotFound is returned when an entry is not found in cache.
-var ErrNotFound = errors.New("cdc: entry not found")
+var ErrNotFound = errors.New("entry not found")
 
 // ErrBadAddr is returned if the addr is not initialized.
-var ErrBadAddr = errors.New("cdc: addr is not initialized")
+var ErrBadAddr = errors.New("addr is not initialized")
 
 // Entry represents a block entry as stored in the disk cache.
 type Entry struct {

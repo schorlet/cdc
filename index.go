@@ -41,7 +41,7 @@ func (cache DiskCache) OpenURL(url string) (*Entry, error) {
 	h := hash(url)
 	addr, ok := cache.addr[h]
 	if !ok {
-		return nil, ErrBadAddr
+		return nil, ErrNotFound
 	}
 	return OpenEntry(addr, cache.dir)
 }

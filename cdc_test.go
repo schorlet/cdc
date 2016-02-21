@@ -12,6 +12,11 @@ func TestCrawl(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	_, err = cache.OpenURL("http://foo.com")
+	if err != cdc.ErrNotFound {
+		t.Fatalf("got: %v, want: %v", err, cdc.ErrNotFound)
+	}
+
 	for _, url := range cache.URLs() {
 		addr := cache.GetAddr(url)
 		if !addr.Initialized() {

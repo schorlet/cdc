@@ -109,10 +109,10 @@ type entryStore struct {
 	Key          [blockKeyLen]byte // null terminated
 }
 
-func (e entryStore) String() string {
-	return fmt.Sprintf("Hash:%x DataSize:%d DataAddr:%x Key:%s",
-		e.Hash, e.DataSize, e.DataAddr, e.Key)
-}
+// func (e entryStore) String() string {
+// return fmt.Sprintf("Hash:%x DataSize:%d DataAddr:%x Key:%s",
+// e.Hash, e.DataSize, e.DataAddr, e.Key)
+// }
 
 // CacheAddr defines a storage address for a cache record.
 type CacheAddr uint32
