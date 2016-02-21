@@ -37,7 +37,7 @@ const numBlocksMask uint32 = 0x03000000
 const numBlocksOffset uint32 = 24
 
 // IndexHeader for the master index file.
-type IndexHeader struct {
+type indexHeader struct {
 	Magic      uint32
 	Version    uint32
 	NumEntries int32     // Number of entries currently stored.
@@ -56,7 +56,7 @@ type IndexHeader struct {
 // BlockFileHeader is the header of a block-file.
 // A block-file is the file used to store information in blocks (could be
 // EntryStore blocks, RankingsNode blocks or user-data blocks).
-type BlockFileHeader struct {
+type blockFileHeader struct {
 	Magic         uint32
 	Version       uint32
 	ThisFile      int16    // Index of this file.
@@ -91,7 +91,7 @@ type BlockFileHeader struct {
 //  6f 6f 6b 62 6f 6f 6b 2f  6a 61 76 61 73 63 72 69  |ookbook/javascri|
 //  70 74 2f 00 00 00 00 00  00 00 00 00 00 00 00 00  |pt/.............|
 //  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-type EntryStore struct {
+type entryStore struct {
 	Hash         uint32    // Full hash of the key.
 	Next         CacheAddr // Next entry with the same hash or bucket.
 	RankingsNode CacheAddr // Rankings node for this entry.
@@ -109,26 +109,10 @@ type EntryStore struct {
 	Key          [blockKeyLen]byte // null terminated
 }
 
-// URL returns e.Key as a string.
-func (e EntryStore) URL() string {
-	var key []byte
-	if e.LongKey == 0 {
-		if e.KeyLen <= blockKeyLen {
-			key = e.Key[0:e.KeyLen]
-		} else {
-			// KeyLen may be larger, return trimmed
-			key = e.Key[:]
-		}
-	}
-	return string(key)
-}
-
-func (e EntryStore) String() string {
-	return fmt.Sprintf("Hash:%x Next:%x RankingsNode:%x ReuseCount:%d RefetchCount:%d State:%x CreationTime:%d KeyLen:%d LongKey:%x DataSize:%d DataAddr:%x Flags:%x SelfHash:%x Key:%s",
-		e.Hash, e.Next, e.RankingsNode, e.ReuseCount, e.RefetchCount,
-		e.State, e.CreationTime, e.KeyLen, e.LongKey, e.DataSize, e.DataAddr,
-		e.Flags, e.SelfHash, e.URL())
-}
+// func (e entryStore) String() string {
+// return fmt.Sprintf("Hash:%x DataSize:%d DataAddr:%x Key:%s",
+// e.Hash, e.DataSize, e.DataAddr, e.Key)
+// }
 
 // CacheAddr defines a storage address for a cache record.
 type CacheAddr uint32
@@ -215,17 +199,17 @@ func (addr CacheAddr) NumBlocks() uint32 {
 }
 
 func init() {
-	ih := new(IndexHeader)
+	ih := new(indexHeader)
 	if n := binary.Size(ih); n != 368 {
 		log.Fatal("IndexHeader size error:", n)
 	}
 
-	bh := new(BlockFileHeader)
+	bh := new(blockFileHeader)
 	if n := binary.Size(bh); n != blockHeaderSize {
 		log.Fatal("BlockFileHeader size error:", n)
 	}
 
-	entry := new(EntryStore)
+	entry := new(entryStore)
 	if n := binary.Size(entry); n != 256 {
 		log.Fatal("EntryStore size error:", n)
 	}

@@ -21,4 +21,4 @@ What if you were able to diplay the content directly into your browser ? This is
 $ go run main.go ../../testcache/
 ```
 
-Go to http://localhost:8000/ to browse the cache.
+Go to http://localhost:8000/ to browse the testcache.

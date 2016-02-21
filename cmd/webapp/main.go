@@ -1,3 +1,4 @@
+// Package webapp helps browsing disk cache.
 package main
 
 import (
@@ -11,26 +12,56 @@ import (
 	"github.com/schorlet/cdc"
 )
 
-// indexHandler handles all requests.
-func indexHandler(w http.ResponseWriter, r *http.Request) {
+type cacheHandler struct {
+	*cdc.DiskCache
+	host map[string]bool     // [hostname]bool
+	url  map[string][]string // [hostname]urls
+}
+
+// CacheHandler returns a handler that serves HTTP requests
+// with the contents of the specified cache.
+func CacheHandler(cache *cdc.DiskCache) http.Handler {
+	handler := &cacheHandler{
+		DiskCache: cache,
+		host:      make(map[string]bool),
+		url:       make(map[string][]string),
+	}
+
+	for _, ustr := range cache.URLs() {
+		u, err := url.Parse(ustr)
+		if err != nil {
+			continue
+		}
+		if len(u.Host) != 0 {
+			if !handler.host[u.Host] {
+				handler.host[u.Host] = true
+			}
+			handler.url[u.Host] = append(handler.url[u.Host], ustr)
+		}
+	}
+	return handler
+}
+
+// ServeHTTP responds to an HTTP request.
+func (h *cacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL)
 	host := r.FormValue("host")
 	view := r.FormValue("view")
 
 	if len(host) != 0 {
-		handleHost(w, r, host)
+		h.handleHost(w, r, host)
 
 	} else if len(view) != 0 {
-		handleView(w, r, view)
+		h.handleView(w, r, view)
 
 	} else {
 		view = assetView(r)
 
 		if len(view) != 0 {
-			handleView(w, r, view)
+			h.handleView(w, r, view)
 
 		} else if r.URL.Path == "/" {
-			handleHost(w, r, host)
+			h.handleHost(w, r, host)
 
 		} else {
 			http.Error(w, "cdc: unknown resource", http.StatusBadRequest)
@@ -39,7 +70,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleHost prints all hosts or all urls from host.
-func handleHost(w http.ResponseWriter, r *http.Request, host string) {
+func (h *cacheHandler) handleHost(w http.ResponseWriter, r *http.Request, host string) {
 	t, err := template.ParseFiles("index.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -52,9 +83,9 @@ func handleHost(w http.ResponseWriter, r *http.Request, host string) {
 	}
 
 	if len(host) == 0 {
-		data.Hosts = cacheHost
+		data.Hosts = h.host
 	} else {
-		data.URLs = cacheURL[host]
+		data.URLs = h.url[host]
 	}
 
 	w.Header().Set("Cache-Control", "no-cache, no-store")
@@ -62,8 +93,8 @@ func handleHost(w http.ResponseWriter, r *http.Request, host string) {
 }
 
 // handleView prints the body of the view.
-func handleView(w http.ResponseWriter, r *http.Request, view string) {
-	entry, err := cdc.OpenURL(view)
+func (h *cacheHandler) handleView(w http.ResponseWriter, r *http.Request, view string) {
+	entry, err := h.OpenURL(view)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -81,7 +112,7 @@ func handleView(w http.ResponseWriter, r *http.Request, view string) {
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
-			handleView(w, r, location)
+			h.handleView(w, r, location)
 		}
 		return
 	}
@@ -163,37 +194,11 @@ func assetView(r *http.Request) (v string) {
 	return
 }
 
-var cacheHost map[string]bool    // [hostname]bool
-var cacheURL map[string][]string // [hostname]urls
-
-func initCache(name string) {
-	err := cdc.Init(name)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	cacheHost = make(map[string]bool)
-	cacheURL = make(map[string][]string)
-
-	for _, ustr := range cdc.URLs() {
-		u, err := url.Parse(ustr)
-		if err != nil {
-			continue
-		}
-		if len(u.Host) != 0 {
-			if !cacheHost[u.Host] {
-				cacheHost[u.Host] = true
-			}
-			cacheURL[u.Host] = append(cacheURL[u.Host], ustr)
-		}
-	}
-}
-
-const usage = `cdcd is a webapp for reading Chromium disk cache v2.
+const usage = `this is a webapp for reading Chromium disk cache v2.
 
 Usage:
 
-    cdcd CACHEDIR
+    go run main.go CACHEDIR
 
 CACHEDIR is the path to the chromium cache directory.
 `
@@ -204,14 +209,19 @@ func main() {
 		log.Fatal(usage)
 	}
 
-	initCache(os.Args[1])
+	cache, err := cdc.OpenCache(os.Args[1])
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	http.HandleFunc("/", indexHandler)
+	handler := CacheHandler(cache)
+	http.Handle("/", handler)
+
 	http.HandleFunc("/favicon.ico", http.NotFound)
 	http.HandleFunc("/favicon.png", http.NotFound)
 	http.HandleFunc("/opensearch.xml", http.NotFound)
 
-	err := http.ListenAndServe(":8000", nil)
+	err = http.ListenAndServe(":8000", nil)
 	if err != nil {
 		log.Fatal(err)
 	}

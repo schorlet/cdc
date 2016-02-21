@@ -8,21 +8,99 @@ import (
 	"path/filepath"
 )
 
-var (
-	cacheDir  string               // cache directory
-	cacheAddr map[uint32]CacheAddr // [entry.hash]addr
-	cacheKey  map[uint32]string    // [entry.hash]entry.key
-)
+// DiskCache reads the blocks files and maps URL to CacheAddr.
+type DiskCache struct {
+	dir  string               // cache directory
+	addr map[uint32]CacheAddr // [entry.hash]addr
+	key  []string             // []entry.key
+}
 
-// Init reads cache at dir.
-func Init(dir string) error {
+// OpenCache opens the disk cache at dir.
+func OpenCache(dir string) (*DiskCache, error) {
+	return openCache(dir)
+}
+
+// URLs returns all the URLs currently stored.
+func (cache DiskCache) URLs() []string {
+	return cache.key
+}
+
+// GetAddr returns the addr for url.
+// The returned CacheAddr may be not initialized, meaning that the url is unknown.
+func (cache DiskCache) GetAddr(url string) CacheAddr {
+	h := hash(url)
+	return cache.addr[h]
+}
+
+// OpenURL returns the Entry for url.
+func (cache DiskCache) OpenURL(url string) (*Entry, error) {
+	h := hash(url)
+	addr, ok := cache.addr[h]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	return OpenEntry(addr, cache.dir)
+}
+
+func openCache(dir string) (*DiskCache, error) {
+	err := checkCache(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	file, err := os.Open(path.Join(dir, "index"))
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	return readIndex(file)
+}
+
+func readIndex(file *os.File) (*DiskCache, error) {
+	index := new(indexHeader)
+	err := binary.Read(file, binary.LittleEndian, index)
+	if err != nil {
+		return nil, err
+	}
+
+	cache := &DiskCache{
+		dir:  filepath.Dir(file.Name()),
+		addr: make(map[uint32]CacheAddr),
+		key:  make([]string, 0, index.NumEntries),
+	}
+
+	for i := index.TableLen; i > 0; i-- {
+		addr := new(CacheAddr)
+		err = binary.Read(file, binary.LittleEndian, addr)
+		if err != nil {
+			break
+		}
+		if !addr.Initialized() {
+			continue
+		}
+
+		entry, ere := OpenEntry(*addr, cache.dir)
+		if ere == nil &&
+			entry.State == 0 &&
+			// KeyLen may be larger, not managed
+			entry.KeyLen <= blockKeyLen {
+
+			cache.addr[entry.Hash] = *addr
+			cache.key = append(cache.key, entry.URL())
+		}
+	}
+	return cache, err
+}
+
+func checkCache(dir string) error {
 	name := path.Clean(dir)
 	info, err := os.Stat(name)
 	if err != nil {
 		return err
 	}
 	if !info.IsDir() {
-		return fmt.Errorf("not a directory: %s", dir)
+		return fmt.Errorf("cdc: not a directory: %s", dir)
 	}
 
 	_, err = os.Stat(path.Join(name, "index"))
@@ -35,65 +113,7 @@ func Init(dir string) error {
 		return err
 	}
 	if len(blocks) != 4 {
-		return fmt.Errorf("not a cache directory: %s", dir)
+		return fmt.Errorf("cdc: not a cache directory: %s", dir)
 	}
-
-	return initMaps(name)
-}
-
-func initMaps(dir string) error {
-	file, err := os.Open(path.Join(dir, "index"))
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	index := new(IndexHeader)
-	err = binary.Read(file, binary.LittleEndian, index)
-	if err != nil {
-		return err
-	}
-
-	cacheDir = dir
-	cacheAddr = make(map[uint32]CacheAddr)
-	cacheKey = make(map[uint32]string)
-
-	i := index.TableLen
-	for ; i > 0; i-- {
-		addr := new(CacheAddr)
-		err = binary.Read(file, binary.LittleEndian, addr)
-		if err != nil {
-			break
-		}
-		addEntry(*addr)
-	}
-	return err
-}
-
-func addEntry(addr CacheAddr) {
-	entry, err := OpenAddr(addr)
-	if err == nil &&
-		entry.State == 0 &&
-		// KeyLen may be larger, not managed
-		entry.KeyLen <= blockKeyLen {
-
-		cacheAddr[entry.Hash] = addr
-		cacheKey[entry.Hash] = entry.URL()
-	}
-}
-
-// URLs returns all the URLs currently stored.
-func URLs() []string {
-	urls := make([]string, 0, len(cacheKey))
-	for _, value := range cacheKey {
-		urls = append(urls, value)
-	}
-	return urls
-}
-
-// GetAddr does a lookup for CacheAddr from hash.
-// The return CacheAddr may be not initialized,
-// meaning that the hash is invalid.
-func GetAddr(hash uint32) CacheAddr {
-	return cacheAddr[hash]
+	return nil
 }
