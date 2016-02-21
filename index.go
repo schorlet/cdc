@@ -8,11 +8,11 @@ import (
 	"path/filepath"
 )
 
-// DiskCache represents a disk cache.
+// DiskCache reads the blocks files and maps URL to CacheAddr.
 type DiskCache struct {
 	dir  string               // cache directory
 	addr map[uint32]CacheAddr // [entry.hash]addr
-	key  map[uint32]string    // [entry.hash]entry.key
+	key  []string             // []entry.key
 }
 
 // OpenCache opens the disk cache at dir.
@@ -22,11 +22,7 @@ func OpenCache(dir string) (*DiskCache, error) {
 
 // URLs returns all the URLs currently stored.
 func (cache DiskCache) URLs() []string {
-	urls := make([]string, 0, len(cache.key))
-	for _, value := range cache.key {
-		urls = append(urls, value)
-	}
-	return urls
+	return cache.key
 }
 
 // GetAddr returns the addr for url.
@@ -58,16 +54,20 @@ func openCache(dir string) (*DiskCache, error) {
 	}
 	defer file.Close()
 
+	return readIndex(file)
+}
+
+func readIndex(file *os.File) (*DiskCache, error) {
 	index := new(indexHeader)
-	err = binary.Read(file, binary.LittleEndian, index)
+	err := binary.Read(file, binary.LittleEndian, index)
 	if err != nil {
 		return nil, err
 	}
 
 	cache := &DiskCache{
-		dir:  dir,
+		dir:  filepath.Dir(file.Name()),
 		addr: make(map[uint32]CacheAddr),
-		key:  make(map[uint32]string),
+		key:  make([]string, 0, index.NumEntries),
 	}
 
 	for i := index.TableLen; i > 0; i-- {
@@ -76,17 +76,21 @@ func openCache(dir string) (*DiskCache, error) {
 		if err != nil {
 			break
 		}
-		entry, err := OpenEntry(*addr, dir)
-		if err == nil &&
+		if !addr.Initialized() {
+			continue
+		}
+
+		entry, ere := OpenEntry(*addr, cache.dir)
+		if ere == nil &&
 			entry.State == 0 &&
 			// KeyLen may be larger, not managed
 			entry.KeyLen <= blockKeyLen {
 
 			cache.addr[entry.Hash] = *addr
-			cache.key[entry.Hash] = entry.URL()
+			cache.key = append(cache.key, entry.URL())
 		}
 	}
-	return cache, nil
+	return cache, err
 }
 
 func checkCache(dir string) error {

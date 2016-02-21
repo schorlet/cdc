@@ -11,11 +11,11 @@
 
 {{ with .URLs }}
     {{ range $value := . }}
-        <div><a href="/?view={{ $value }}">{{ $value }}</a></div>
+        <div><a href="?view={{ $value }}">{{ $value }}</a></div>
     {{ end }}
 {{ else }}
     {{ range $key, $_ := .Hosts }}
-        <div><a href="/?host={{ $key }}">{{ $key }}</a></div>
+        <div><a href="?host={{ $key }}">{{ $key }}</a></div>
     {{ end }}
 {{ end }}
 
