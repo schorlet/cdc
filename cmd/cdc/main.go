@@ -1,3 +1,4 @@
+// Package cdc helps reading disk cache on command line.
 package main
 
 import (
@@ -69,8 +70,7 @@ func main() {
 	// exec
 	if command == "list" {
 		for _, url := range cache.URLs() {
-			addr := cache.GetAddr(url)
-			fmt.Println(addr, url)
+			fmt.Println(url)
 		}
 
 	} else if cmdline.NFlag() != 1 {

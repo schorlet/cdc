@@ -30,7 +30,7 @@ func (cache DiskCache) URLs() []string {
 }
 
 // GetAddr returns the addr for url.
-// The returned CacheAddr may be not initialized, meaning that the hash is unknown or invalid.
+// The returned CacheAddr may be not initialized, meaning that the url is unknown.
 func (cache DiskCache) GetAddr(url string) CacheAddr {
 	h := hash(url)
 	return cache.addr[h]
