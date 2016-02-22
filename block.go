@@ -17,7 +17,7 @@ var ErrNotFound = errors.New("entry not found")
 // ErrBadAddr is returned if the addr is not initialized.
 var ErrBadAddr = errors.New("addr is not initialized")
 
-// Entry represents a block entry as stored in the disk cache.
+// Entry represents a cache record as stored in the disk cache.
 type Entry struct {
 	*entryStore
 	dir string

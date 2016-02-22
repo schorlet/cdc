@@ -26,7 +26,9 @@ func withContext(fn func(url string)) {
 
 func TestView(t *testing.T) {
 	withContext(func(base string) {
-		q := url.Values{"view": []string{"https://golang.org/doc/gopher/pkg.png"}}
+		q := url.Values{
+			"view": []string{"https://golang.org/doc/gopher/pkg.png"},
+		}
 		u, _ := url.Parse(base)
 		u.RawQuery = q.Encode()
 
@@ -37,12 +39,12 @@ func TestView(t *testing.T) {
 
 		cl := res.Header.Get("Content-Length")
 		if cl != "5409" {
-			t.Fatal("go: %s, want: %s", cl, "5409")
+			t.Fatalf("got: %s, want: 5409", cl)
 		}
 
 		ct := res.Header.Get("Content-Type")
 		if ct != "image/png" {
-			t.Fatal("go: %s, want: %s", ct, "image/png")
+			t.Fatalf("got: %s, want: image/png", ct)
 		}
 
 		config, err := png.DecodeConfig(res.Body)

@@ -1,6 +1,8 @@
 package cdc_test
 
 import (
+	"io"
+	"io/ioutil"
 	"testing"
 
 	"github.com/schorlet/cdc"
@@ -20,7 +22,7 @@ func TestCrawl(t *testing.T) {
 	for _, url := range cache.URLs() {
 		addr := cache.GetAddr(url)
 		if !addr.Initialized() {
-			t.Errorf("got: addr not initialized")
+			t.Fatal("got: addr not initialized")
 			continue
 		}
 
@@ -29,7 +31,7 @@ func TestCrawl(t *testing.T) {
 			t.Fatal(err)
 		}
 		if url != entry.URL() {
-			t.Fatal("go: %s, want: %s", entry.URL(), url)
+			t.Fatalf("got: %s, want: %s", entry.URL(), url)
 		}
 
 		header, err := entry.Header()
@@ -37,11 +39,15 @@ func TestCrawl(t *testing.T) {
 			t.Fatal(err)
 		}
 		if len(header) == 0 {
-			t.Errorf("got: empty header")
+			t.Fatal("got: empty header")
 			continue
 		}
 
 		body, err := entry.Body()
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, err = io.Copy(ioutil.Discard, body)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -58,7 +64,7 @@ func TestEntry(t *testing.T) {
 
 	url := "https://golang.org/doc/gopher/pkg.png"
 	if url != entry.URL() {
-		t.Fatal("go: %s, want: %s", entry.URL(), url)
+		t.Fatalf("got: %s, want: %s", entry.URL(), url)
 	}
 
 	header, err := entry.Header()
@@ -68,17 +74,24 @@ func TestEntry(t *testing.T) {
 
 	cl := header.Get("Content-Length")
 	if cl != "5409" {
-		t.Fatal("go: %s, want: %s", cl, "5409")
+		t.Fatalf("got: %s, want: 5409", cl)
 	}
 
 	ct := header.Get("Content-Type")
 	if ct != "image/png" {
-		t.Fatal("go: %s, want: %s", ct, "image/png")
+		t.Fatalf("got: %s, want: image/png", ct)
 	}
 
 	body, err := entry.Body()
 	if err != nil {
 		t.Fatal(err)
+	}
+	n, err := io.Copy(ioutil.Discard, body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n != 5409 {
+		t.Fatalf("got: %s, want: 5409", n)
 	}
 	body.Close()
 }
