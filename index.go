@@ -76,21 +76,25 @@ func readIndex(file *os.File) (*DiskCache, error) {
 		if err != nil {
 			break
 		}
-		if !addr.Initialized() {
-			continue
-		}
-
-		entry, ere := OpenEntry(*addr, cache.dir)
-		if ere == nil &&
-			entry.State == 0 &&
-			// KeyLen may be larger, not managed
-			entry.KeyLen <= blockKeyLen {
-
-			cache.addr[entry.Hash] = *addr
-			cache.key = append(cache.key, entry.URL())
+		if addr.Initialized() {
+			cache.readAddr(*addr)
 		}
 	}
 	return cache, err
+}
+
+func (cache *DiskCache) readAddr(addr CacheAddr) {
+	entry, err := OpenEntry(addr, cache.dir)
+	if err != nil {
+		return
+	}
+	if entry.State == 0 &&
+		// KeyLen may be larger, not managed
+		entry.KeyLen <= blockKeyLen {
+
+		cache.addr[entry.Hash] = addr
+		cache.key = append(cache.key, entry.URL())
+	}
 }
 
 func checkCache(dir string) error {
