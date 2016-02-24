@@ -3,6 +3,7 @@ package cdc_test
 import (
 	"io"
 	"io/ioutil"
+	"strconv"
 	"testing"
 
 	"github.com/schorlet/cdc"
@@ -23,7 +24,6 @@ func TestCrawl(t *testing.T) {
 		addr := cache.GetAddr(url)
 		if !addr.Initialized() {
 			t.Fatal("got: addr not initialized")
-			continue
 		}
 
 		entry, err := cache.OpenURL(url)
@@ -40,18 +40,25 @@ func TestCrawl(t *testing.T) {
 		}
 		if len(header) == 0 {
 			t.Fatal("got: empty header")
-			continue
+		}
+		clength := header.Get("Content-Length")
+		nlength, err := strconv.ParseInt(clength, 10, 64)
+		if err != nil {
+			t.Fatal(err)
 		}
 
 		body, err := entry.Body()
 		if err != nil {
 			t.Fatal(err)
 		}
-		_, err = io.Copy(ioutil.Discard, body)
+		n, err := io.Copy(ioutil.Discard, body)
 		if err != nil {
 			t.Fatal(err)
 		}
 		body.Close()
+		if n != nlength {
+			t.Fatalf("got: %d, want: %d", n, nlength)
+		}
 	}
 }
 
