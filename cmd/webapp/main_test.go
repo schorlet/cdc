@@ -1,11 +1,13 @@
 package main
 
 import (
-	"image/png"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 	"testing"
 
 	"github.com/schorlet/cdc"
@@ -26,33 +28,74 @@ func withContext(fn func(url string)) {
 
 func TestView(t *testing.T) {
 	withContext(func(base string) {
-		q := url.Values{
-			"view": []string{"https://golang.org/doc/gopher/pkg.png"},
-		}
-		u, _ := url.Parse(base)
-		u.RawQuery = q.Encode()
-
-		res, err := http.Get(u.String())
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		cl := res.Header.Get("Content-Length")
-		if cl != "5409" {
-			t.Fatalf("got: %s, want: 5409", cl)
-		}
-
-		ct := res.Header.Get("Content-Type")
-		if ct != "image/png" {
-			t.Fatalf("got: %s, want: image/png", ct)
-		}
-
-		config, err := png.DecodeConfig(res.Body)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if config.Width != 83 || config.Height != 120 {
-			t.Fatalf("got: %d x %d, want: 83 x 120", config.Width, config.Height)
-		}
+		get(t, req{
+			base:      base,
+			view:      "https://golang.org/doc/gopher/pkg.png",
+			ctype:     "image/png",
+			cencoding: "",
+			clength:   "5409",
+		})
+		get(t, req{
+			base:      base,
+			view:      "https://golang.org/lib/godoc/godocs.js",
+			ctype:     "application/x-javascript",
+			cencoding: "gzip",
+			clength:   "5186",
+		})
+		get(t, req{
+			base:      base,
+			view:      "https://golang.org/pkg/",
+			ctype:     "text/html; charset=utf-8",
+			cencoding: "gzip",
+			clength:   "8476",
+		})
 	})
+}
+
+type req struct {
+	base, view, ctype, cencoding, clength string
+}
+
+func get(t *testing.T, r req) {
+	q := url.Values{
+		"view": []string{r.view},
+	}
+	u, _ := url.Parse(r.base)
+	u.RawQuery = q.Encode()
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			DisableCompression: true,
+		},
+	}
+	res, err := client.Get(u.String())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cl := res.Header.Get("Content-Length")
+	if cl != r.clength {
+		t.Fatalf("got: %q, want: %q", cl, r.clength)
+	}
+
+	ct := res.Header.Get("Content-Type")
+	if ct != r.ctype {
+		t.Fatalf("got: %q, want: %q", ct, r.ctype)
+	}
+
+	ce := res.Header.Get("Content-Encoding")
+	if ce != r.cencoding {
+		t.Fatalf("got: %q, want: %q", ce, r.cencoding)
+	}
+
+	n, err := io.Copy(ioutil.Discard, res.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res.Body.Close()
+
+	nlength, err := strconv.ParseInt(r.clength, 10, 64)
+	if n != nlength {
+		t.Fatalf("got: %d, want: %d", n, nlength)
+	}
 }
