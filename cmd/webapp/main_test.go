@@ -34,6 +34,7 @@ func TestView(t *testing.T) {
 			ctype:     "image/png",
 			cencoding: "",
 			clength:   "5409",
+			status:    http.StatusOK,
 		})
 		get(t, req{
 			base:      base,
@@ -41,6 +42,7 @@ func TestView(t *testing.T) {
 			ctype:     "application/x-javascript",
 			cencoding: "gzip",
 			clength:   "5186",
+			status:    http.StatusOK,
 		})
 		get(t, req{
 			base:      base,
@@ -48,12 +50,20 @@ func TestView(t *testing.T) {
 			ctype:     "text/html; charset=utf-8",
 			cencoding: "gzip",
 			clength:   "8476",
+			status:    http.StatusOK,
+		})
+		get(t, req{
+			base:   base,
+			view:   "https://golang.org/",
+			status: http.StatusNotFound,
 		})
 	})
 }
 
 type req struct {
-	base, view, ctype, cencoding, clength string
+	base, view                string
+	ctype, cencoding, clength string
+	status                    int
 }
 
 func get(t *testing.T, r req) {
@@ -71,6 +81,12 @@ func get(t *testing.T, r req) {
 	res, err := client.Get(u.String())
 	if err != nil {
 		t.Fatal(err)
+	}
+	if res.StatusCode != r.status {
+		t.Fatalf("got: %d, want: %d", res.StatusCode, r.status)
+	}
+	if res.StatusCode != http.StatusOK {
+		return
 	}
 
 	cl := res.Header.Get("Content-Length")

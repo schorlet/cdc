@@ -95,8 +95,12 @@ func (h *cacheHandler) handleHost(w http.ResponseWriter, r *http.Request, host s
 // handleView prints the body of the view.
 func (h *cacheHandler) handleView(w http.ResponseWriter, r *http.Request, view string) {
 	entry, err := h.OpenURL(view)
+	if err == cdc.ErrNotFound {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

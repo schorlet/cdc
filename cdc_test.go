@@ -98,7 +98,7 @@ func TestEntry(t *testing.T) {
 		t.Fatal(err)
 	}
 	if n != 5409 {
-		t.Fatalf("got: %s, want: 5409", n)
+		t.Fatalf("got: %d, want: 5409", n)
 	}
 	body.Close()
 }
