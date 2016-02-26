@@ -11,7 +11,7 @@ import (
 	"sort"
 )
 
-func ExampleList() {
+func Example_list() {
 	cmd := exec.Command("go", "run", "main.go", "list", "../../testcache")
 
 	output := new(bytes.Buffer)
@@ -48,7 +48,7 @@ func ExampleList() {
 	// https://ssl.google-analytics.com/ga.js
 }
 
-func ExampleHeader() {
+func Example_header() {
 	cmd := exec.Command("go", "run", "main.go", "header", "-addr", "2684420101", "../../testcache")
 
 	output := new(bytes.Buffer)
@@ -75,7 +75,7 @@ func ExampleHeader() {
 	// Status: 200
 }
 
-func ExampleBody() {
+func Example_body() {
 	cmd := exec.Command("go", "run", "main.go", "body", "-addr", "2684420101", "../../testcache")
 
 	output := new(bytes.Buffer)
