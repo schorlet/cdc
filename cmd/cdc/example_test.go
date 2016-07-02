@@ -27,25 +27,26 @@ func Example_list() {
 	}
 
 	// Output:
-	// https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js
-	// https://golang.org/doc/gopher/pkg.png
-	// https://golang.org/favicon.ico
-	// https://golang.org/lib/godoc/godocs.js
-	// https://golang.org/lib/godoc/jquery.treeview.css
-	// https://golang.org/lib/godoc/jquery.treeview.edit.js
-	// https://golang.org/lib/godoc/jquery.treeview.js
-	// https://golang.org/lib/godoc/playground.js
-	// https://golang.org/lib/godoc/style.css
-	// https://golang.org/pkg/
-	// https://golang.org/pkg/bufio/
-	// https://golang.org/pkg/builtin/
-	// https://golang.org/pkg/bytes/
-	// https://golang.org/pkg/io/
-	// https://golang.org/pkg/io/ioutil/
-	// https://golang.org/pkg/os/
-	// https://golang.org/pkg/strconv/
-	// https://golang.org/pkg/strings/
-	// https://ssl.google-analytics.com/ga.js
+	// 2684420098 https://golang.org/pkg/
+	// 2684420099 https://golang.org/lib/godoc/style.css
+	// 2684420100 https://golang.org/lib/godoc/jquery.treeview.css
+	// 2684420101 https://golang.org/doc/gopher/pkg.png
+	// 2684420102 https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js
+	// 2684420103 https://golang.org/lib/godoc/jquery.treeview.js
+	// 2684420104 https://golang.org/lib/godoc/jquery.treeview.edit.js
+	// 2684420105 https://golang.org/lib/godoc/playground.js
+	// 2684420106 https://golang.org/lib/godoc/godocs.js
+	// 2684420118 https://ssl.google-analytics.com/ga.js
+	// 2684420119 https://golang.org/pkg/builtin/
+	// 2684420120 https://golang.org/favicon.ico
+	// 2684420123 https://golang.org/pkg/bufio/
+	// 2684420134 https://golang.org/pkg/bytes/
+	// 2684420137 https://golang.org/pkg/io/ioutil/
+	// 2684420139 https://golang.org/pkg/os/
+	// 2684420140 https://golang.org/pkg/io/
+	// 2684420145 https://golang.org/pkg/strconv/
+	// 2684420147 https://golang.org/pkg/strings/
+
 }
 
 func Example_header() {

@@ -46,7 +46,8 @@ func main() {
 	// command
 	command := os.Args[1]
 	if command == "-h" || command == "--help" {
-		printUsage()
+		fmt.Println(usage)
+		return
 	}
 
 	// flags
@@ -70,7 +71,7 @@ func main() {
 	// exec
 	if command == "list" {
 		for _, url := range cache.URLs() {
-			fmt.Println(url)
+			fmt.Printf("%d %s\n", cache.GetAddr(url), url)
 		}
 
 	} else if cmdline.NFlag() != 1 {
