@@ -110,7 +110,7 @@ func get(t *testing.T, r req) {
 	}
 	res.Body.Close()
 
-	nlength, err := strconv.ParseInt(r.clength, 10, 64)
+	nlength, _ := strconv.ParseInt(r.clength, 10, 64)
 	if n != nlength {
 		t.Fatalf("got: %d, want: %d", n, nlength)
 	}
