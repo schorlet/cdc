@@ -11,8 +11,16 @@ import (
 	"sort"
 )
 
+func init() {
+	cmd := exec.Command("go", "build")
+
+	if err := cmd.Run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
 func Example_list() {
-	cmd := exec.Command("go", "run", "main.go", "list", "../../testcache")
+	cmd := exec.Command("./cdc", "list", "../../testcache")
 
 	output := new(bytes.Buffer)
 	cmd.Stdout = output
@@ -50,7 +58,7 @@ func Example_list() {
 }
 
 func Example_header() {
-	cmd := exec.Command("go", "run", "main.go", "header", "-addr", "2684420101", "../../testcache")
+	cmd := exec.Command("./cdc", "header", "-addr", "2684420101", "../../testcache")
 
 	output := new(bytes.Buffer)
 	cmd.Stdout = output
@@ -77,7 +85,7 @@ func Example_header() {
 }
 
 func Example_body() {
-	cmd := exec.Command("go", "run", "main.go", "body", "-addr", "2684420101", "../../testcache")
+	cmd := exec.Command("./cdc", "body", "-addr", "2684420101", "../../testcache")
 
 	output := new(bytes.Buffer)
 	cmd.Stdout = output
