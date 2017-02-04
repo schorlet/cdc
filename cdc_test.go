@@ -55,7 +55,7 @@ func TestCrawl(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		body.Close()
+		_ = body.Close()
 		if n != nlength {
 			t.Fatalf("got: %d, want: %d", n, nlength)
 		}
@@ -100,5 +100,5 @@ func TestEntry(t *testing.T) {
 	if n != 5409 {
 		t.Fatalf("got: %d, want: 5409", n)
 	}
-	body.Close()
+	_ = body.Close()
 }

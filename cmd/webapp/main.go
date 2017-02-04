@@ -89,7 +89,10 @@ func (h *cacheHandler) handleHost(w http.ResponseWriter, r *http.Request, host s
 	}
 
 	w.Header().Set("Cache-Control", "no-cache, no-store")
-	t.Execute(w, data)
+	err = t.Execute(w, data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 // handleView prints the body of the view.
@@ -137,7 +140,10 @@ func (h *cacheHandler) handleView(w http.ResponseWriter, r *http.Request, view s
 	}
 
 	w.Header().Set("Cache-Control", "no-cache, no-store")
-	io.Copy(w, body)
+	_, err = io.Copy(w, body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 // redirectView handles view redirection to location.

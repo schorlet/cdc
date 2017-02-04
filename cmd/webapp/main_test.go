@@ -108,7 +108,7 @@ func get(t *testing.T, r req) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	res.Body.Close()
+	_ = res.Body.Close()
 
 	nlength, _ := strconv.ParseInt(r.clength, 10, 64)
 	if n != nlength {

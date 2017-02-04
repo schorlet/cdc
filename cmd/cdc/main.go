@@ -137,5 +137,8 @@ func printBody(entry *cdc.Entry) {
 	}
 	defer body.Close()
 
-	io.Copy(os.Stdout, body)
+	_, err = io.Copy(os.Stdout, body)
+	if err != nil {
+		log.Println(err)
+	}
 }

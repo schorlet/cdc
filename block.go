@@ -73,14 +73,32 @@ func (e Entry) Header() (http.Header, error) {
 	}
 	reader := bytes.NewReader(b)
 
-	binary.Read(reader, binary.LittleEndian, &infoSize)
-	binary.Read(reader, binary.LittleEndian, &flag)
-	binary.Read(reader, binary.LittleEndian, &requestTime)
-	binary.Read(reader, binary.LittleEndian, &responseTime)
-	binary.Read(reader, binary.LittleEndian, &headerSize)
+	err = binary.Read(reader, binary.LittleEndian, &infoSize)
+	if err != nil {
+		return nil, err
+	}
+	err = binary.Read(reader, binary.LittleEndian, &flag)
+	if err != nil {
+		return nil, err
+	}
+	err = binary.Read(reader, binary.LittleEndian, &requestTime)
+	if err != nil {
+		return nil, err
+	}
+	err = binary.Read(reader, binary.LittleEndian, &responseTime)
+	if err != nil {
+		return nil, err
+	}
+	err = binary.Read(reader, binary.LittleEndian, &headerSize)
+	if err != nil {
+		return nil, err
+	}
 
 	p := make([]byte, headerSize)
-	binary.Read(reader, binary.LittleEndian, p)
+	err = binary.Read(reader, binary.LittleEndian, p)
+	if err != nil {
+		return nil, err
+	}
 
 	header := make(http.Header)
 	lines := bytes.Split(p, []byte{0})
