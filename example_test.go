@@ -10,7 +10,7 @@ import (
 
 // Example gets an entry from the cache and prints to stdout.
 func Example() {
-	cache, err := cdc.OpenCache("testcache")
+	cache, err := cdc.OpenCache("testdata")
 	if err != nil {
 		log.Fatal(err)
 	}

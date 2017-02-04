@@ -10,7 +10,7 @@ import (
 )
 
 func TestCrawl(t *testing.T) {
-	cache, err := cdc.OpenCache("testcache")
+	cache, err := cdc.OpenCache("testdata")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,7 +64,7 @@ func TestCrawl(t *testing.T) {
 
 func TestEntry(t *testing.T) {
 	addr := cdc.CacheAddr(2684420101)
-	entry, err := cdc.OpenEntry(addr, "testcache")
+	entry, err := cdc.OpenEntry(addr, "testdata")
 	if err != nil {
 		t.Fatal(err)
 	}

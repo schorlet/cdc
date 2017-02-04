@@ -14,7 +14,7 @@ import (
 )
 
 func withContext(fn func(url string)) {
-	cache, err := cdc.OpenCache("../../testcache")
+	cache, err := cdc.OpenCache("../../testdata")
 	if err != nil {
 		log.Fatal(err)
 	}

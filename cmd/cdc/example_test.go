@@ -20,7 +20,7 @@ func init() {
 }
 
 func Example_list() {
-	cmd := exec.Command("./cdc", "list", "../../testcache")
+	cmd := exec.Command("./cdc", "list", "../../testdata")
 
 	output := new(bytes.Buffer)
 	cmd.Stdout = output
@@ -58,7 +58,7 @@ func Example_list() {
 }
 
 func Example_header() {
-	cmd := exec.Command("./cdc", "header", "-addr", "2684420101", "../../testcache")
+	cmd := exec.Command("./cdc", "header", "-addr", "2684420101", "../../testdata")
 
 	output := new(bytes.Buffer)
 	cmd.Stdout = output
@@ -85,7 +85,7 @@ func Example_header() {
 }
 
 func Example_body() {
-	cmd := exec.Command("./cdc", "body", "-addr", "2684420101", "../../testcache")
+	cmd := exec.Command("./cdc", "body", "-addr", "2684420101", "../../testdata")
 
 	output := new(bytes.Buffer)
 	cmd.Stdout = output
