@@ -4,7 +4,7 @@ cdc client
 ### List all entries
 
 ```sh
-$ go run main.go list ../../testcache/
+$ go run main.go list ../../testdata/
 2684420103 https://golang.org/lib/godoc/jquery.treeview.js
 2684420102 https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js
 2684420140 https://golang.org/pkg/io/
@@ -29,7 +29,7 @@ $ go run main.go list ../../testcache/
 ### Print entry header
 
 ```sh
-$ go run main.go header -addr 2684420101 ../../testcache/
+$ go run main.go header -addr 2684420101 ../../testdata/
 Alternate-Protocol: 443:quic,p=1
 Content-Length: 5409
 Last-Modified: Mon, 07 Dec 2015 14:14:26 GMT
@@ -44,12 +44,12 @@ Content-Type: image/png
 ### Print entry body
 
 ```sh
-$ go run main.go body -addr 2684420101 ../../testcache/ | file -
+$ go run main.go body -addr 2684420101 ../../testdata/ | file -
 /dev/stdin: PNG image data, 83 x 120, 8-bit grayscale, non-interlaced
 ```
 
 ```sh
-$ go run main.go body -addr 2684420101 ../../testcache/ | hexdump -C -n 32
+$ go run main.go body -addr 2684420101 ../../testdata/ | hexdump -C -n 32
 00000000  89 50 4e 47 0d 0a 1a 0a  00 00 00 0d 49 48 44 52  |.PNG........IHDR|
 00000010  00 00 00 53 00 00 00 78  08 00 00 00 00 ab b2 91  |...S...x........|
 00000020
