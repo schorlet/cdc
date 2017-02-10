@@ -44,7 +44,7 @@ func main() {
 
 	if cmd == "list" {
 		for _, url := range cache.URLs() {
-			fmt.Printf("%d %s\n", cache.GetAddr(url), url)
+			fmt.Printf("%d\t%s\n", cache.GetAddr(url), url)
 		}
 
 	} else {
