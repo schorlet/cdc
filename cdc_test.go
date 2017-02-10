@@ -30,8 +30,8 @@ func TestCrawl(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if url != entry.URL() {
-			t.Fatalf("got: %s, want: %s", entry.URL(), url)
+		if entry.URL() != url {
+			t.Fatalf("bad url: %s, want: %s", entry.URL(), url)
 		}
 
 		header, err := entry.Header()
@@ -57,7 +57,7 @@ func TestCrawl(t *testing.T) {
 		}
 		_ = body.Close()
 		if n != nlength {
-			t.Fatalf("got: %d, want: %d", n, nlength)
+			t.Fatalf("bad stream-length: %d, want: %d", n, nlength)
 		}
 	}
 }
@@ -70,8 +70,8 @@ func TestEntry(t *testing.T) {
 	}
 
 	url := "https://golang.org/doc/gopher/pkg.png"
-	if url != entry.URL() {
-		t.Fatalf("got: %s, want: %s", entry.URL(), url)
+	if entry.URL() != url {
+		t.Fatalf("bad url: %s, want: %s", entry.URL(), url)
 	}
 
 	header, err := entry.Header()
@@ -81,12 +81,12 @@ func TestEntry(t *testing.T) {
 
 	cl := header.Get("Content-Length")
 	if cl != "5409" {
-		t.Fatalf("got: %s, want: 5409", cl)
+		t.Fatalf("bad content-length: %s, want: 5409", cl)
 	}
 
 	ct := header.Get("Content-Type")
 	if ct != "image/png" {
-		t.Fatalf("got: %s, want: image/png", ct)
+		t.Fatalf("bad content-type: %s, want: image/png", ct)
 	}
 
 	body, err := entry.Body()
@@ -98,7 +98,7 @@ func TestEntry(t *testing.T) {
 		t.Fatal(err)
 	}
 	if n != 5409 {
-		t.Fatalf("got: %d, want: 5409", n)
+		t.Fatalf("bad stream-length: %d, want: 5409", n)
 	}
 	_ = body.Close()
 }

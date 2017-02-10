@@ -83,7 +83,7 @@ func get(t *testing.T, r req) {
 		t.Fatal(err)
 	}
 	if res.StatusCode != r.status {
-		t.Fatalf("got: %d, want: %d", res.StatusCode, r.status)
+		t.Fatalf("bad statuscode: %d, want: %d", res.StatusCode, r.status)
 	}
 	if res.StatusCode != http.StatusOK {
 		return
@@ -91,17 +91,17 @@ func get(t *testing.T, r req) {
 
 	cl := res.Header.Get("Content-Length")
 	if cl != r.clength {
-		t.Fatalf("got: %q, want: %q", cl, r.clength)
+		t.Fatalf("bad content-length: %q, want: %q", cl, r.clength)
 	}
 
 	ct := res.Header.Get("Content-Type")
 	if ct != r.ctype {
-		t.Fatalf("got: %q, want: %q", ct, r.ctype)
+		t.Fatalf("bad content-type: %q, want: %q", ct, r.ctype)
 	}
 
 	ce := res.Header.Get("Content-Encoding")
 	if ce != r.cencoding {
-		t.Fatalf("got: %q, want: %q", ce, r.cencoding)
+		t.Fatalf("bad content-encoding: %q, want: %q", ce, r.cencoding)
 	}
 
 	n, err := io.Copy(ioutil.Discard, res.Body)
@@ -112,6 +112,6 @@ func get(t *testing.T, r req) {
 
 	nlength, _ := strconv.ParseInt(r.clength, 10, 64)
 	if n != nlength {
-		t.Fatalf("got: %d, want: %d", n, nlength)
+		t.Fatalf("bad stream size: %d, want: %d", n, nlength)
 	}
 }

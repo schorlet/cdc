@@ -31,11 +31,6 @@ The flags are:
 CACHEDIR is the path to the chromium cache directory.
 `
 
-func printUsage() {
-	log.Println(usage)
-	os.Exit(2)
-}
-
 func main() {
 	log.SetFlags(0)
 
@@ -62,14 +57,14 @@ func main() {
 			printBody(entry)
 
 		} else {
-			log.Fatalf("unknown command: %s", cmd)
+			log.Fatalf("unknown command: %q", cmd)
 		}
 	}
 }
 
 func parseArgs(cmd, url, addr, cachedir *string) {
 	if len(os.Args) == 1 {
-		printUsage()
+		log.Fatal(usage)
 	}
 
 	// cmd
@@ -77,22 +72,22 @@ func parseArgs(cmd, url, addr, cachedir *string) {
 
 	// flags
 	flags := flag.NewFlagSet("", flag.ExitOnError)
-	flags.Usage = printUsage
+	flags.Usage = func() { log.Println(usage) }
 
 	flags.StringVar(url, "url", "", "entry url")
 	flags.StringVar(addr, "addr", "", "entry addr")
 
 	err := flags.Parse(os.Args[2:])
 	if err != nil {
-		log.Fatal("error:", err)
+		log.Fatal(err)
 	}
 
 	if *cmd != "list" && flags.NFlag() != 1 {
-		printUsage()
+		log.Fatal(usage)
 	}
 
 	if flags.NArg() != 1 {
-		printUsage()
+		log.Fatal(usage)
 	}
 
 	*cachedir = flags.Arg(0)

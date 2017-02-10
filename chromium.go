@@ -201,16 +201,16 @@ func (addr CacheAddr) NumBlocks() uint32 {
 func init() {
 	ih := new(indexHeader)
 	if n := binary.Size(ih); n != 368 {
-		log.Fatal("IndexHeader size error:", n)
+		log.Fatalf("IndexHeader size error: %d, want: 368", n)
 	}
 
 	bh := new(blockFileHeader)
 	if n := binary.Size(bh); n != blockHeaderSize {
-		log.Fatal("BlockFileHeader size error:", n)
+		log.Fatalf("BlockFileHeader size error: %d, want: %d", n, blockHeaderSize)
 	}
 
 	entry := new(entryStore)
 	if n := binary.Size(entry); n != 256 {
-		log.Fatal("EntryStore size error:", n)
+		log.Fatalf("EntryStore size error: %d, want: 256", n)
 	}
 }

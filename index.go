@@ -104,7 +104,7 @@ func checkCache(dir string) error {
 		return err
 	}
 	if !info.IsDir() {
-		return fmt.Errorf("cdc: not a directory: %s", dir)
+		return fmt.Errorf("index: not a directory: %q", dir)
 	}
 
 	_, err = os.Stat(path.Join(name, "index"))
@@ -117,7 +117,7 @@ func checkCache(dir string) error {
 		return err
 	}
 	if len(blocks) != 4 {
-		return fmt.Errorf("cdc: not a cache directory: %s", dir)
+		return fmt.Errorf("index: not a cache directory: %q", dir)
 	}
 	return nil
 }
