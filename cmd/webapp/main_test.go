@@ -13,6 +13,14 @@ import (
 	"github.com/schorlet/cdc"
 )
 
+type req struct {
+	url       string
+	ctype     string
+	cencoding string
+	clength   string
+	status    int
+}
+
 func withContext(fn func(url string)) {
 	cache, err := cdc.OpenCache("../../testdata")
 	if err != nil {
@@ -26,62 +34,61 @@ func withContext(fn func(url string)) {
 	fn(server.URL)
 }
 
+func makeURL(base, view string) string {
+	q := url.Values{
+		"view": []string{view},
+	}
+	u, _ := url.Parse(base)
+	u.RawQuery = q.Encode()
+	return u.String()
+}
+
 func TestView(t *testing.T) {
 	withContext(func(base string) {
-		get(t, req{
-			base:      base,
-			view:      "https://golang.org/doc/gopher/pkg.png",
-			ctype:     "image/png",
-			cencoding: "",
-			clength:   "5409",
-			status:    http.StatusOK,
-		})
-		get(t, req{
-			base:      base,
-			view:      "https://golang.org/lib/godoc/godocs.js",
-			ctype:     "application/x-javascript",
-			cencoding: "gzip",
-			clength:   "5186",
-			status:    http.StatusOK,
-		})
-		get(t, req{
-			base:      base,
-			view:      "https://golang.org/pkg/",
-			ctype:     "text/html; charset=utf-8",
-			cencoding: "gzip",
-			clength:   "8476",
-			status:    http.StatusOK,
-		})
-		get(t, req{
-			base:   base,
-			view:   "https://golang.org/",
-			status: http.StatusNotFound,
-		})
+		tts := []req{
+			{
+				url:       makeURL(base, "https://golang.org/doc/gopher/pkg.png"),
+				ctype:     "image/png",
+				cencoding: "",
+				clength:   "5409",
+				status:    http.StatusOK,
+			},
+			{
+				url:       makeURL(base, "https://golang.org/lib/godoc/godocs.js"),
+				ctype:     "application/x-javascript",
+				cencoding: "gzip",
+				clength:   "5186",
+				status:    http.StatusOK,
+			}, {
+				url:       makeURL(base, "https://golang.org/pkg/"),
+				ctype:     "text/html; charset=utf-8",
+				cencoding: "gzip",
+				clength:   "8476",
+				status:    http.StatusOK,
+			}, {
+				url:    makeURL(base, "https://golang.org/"),
+				status: http.StatusNotFound,
+			},
+		}
+
+		client := &http.Client{
+			Transport: &http.Transport{
+				DisableCompression: true,
+			},
+		}
+
+		for _, tt := range tts {
+			res, err := client.Get(tt.url)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			verify(t, tt, res)
+		}
 	})
 }
 
-type req struct {
-	base, view                string
-	ctype, cencoding, clength string
-	status                    int
-}
-
-func get(t *testing.T, r req) {
-	q := url.Values{
-		"view": []string{r.view},
-	}
-	u, _ := url.Parse(r.base)
-	u.RawQuery = q.Encode()
-
-	client := &http.Client{
-		Transport: &http.Transport{
-			DisableCompression: true,
-		},
-	}
-	res, err := client.Get(u.String())
-	if err != nil {
-		t.Fatal(err)
-	}
+func verify(t *testing.T, r req, res *http.Response) {
 	if res.StatusCode != r.status {
 		t.Fatalf("bad statuscode: %d, want: %d", res.StatusCode, r.status)
 	}
