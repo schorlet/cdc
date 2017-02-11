@@ -64,6 +64,11 @@ func readIndex(file *os.File) (*DiskCache, error) {
 		return nil, err
 	}
 
+	if index.Magic != magicNumber {
+		return nil, fmt.Errorf("bad magic number:%x, want:%x",
+			index.Magic, magicNumber)
+	}
+
 	cache := &DiskCache{
 		dir:  filepath.Dir(file.Name()),
 		addr: make(map[uint32]CacheAddr),
@@ -104,7 +109,7 @@ func checkCache(dir string) error {
 		return err
 	}
 	if !info.IsDir() {
-		return fmt.Errorf("index: not a directory: %q", dir)
+		return fmt.Errorf("not a directory: %q", dir)
 	}
 
 	_, err = os.Stat(path.Join(name, "index"))
@@ -117,7 +122,7 @@ func checkCache(dir string) error {
 		return err
 	}
 	if len(blocks) != 4 {
-		return fmt.Errorf("index: not a cache directory: %q", dir)
+		return fmt.Errorf("not a cache directory: %q", dir)
 	}
 	return nil
 }

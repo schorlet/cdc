@@ -18,6 +18,9 @@ import (
 	"log"
 )
 
+// IndexHeader
+const magicNumber uint32 = 0xc103cac3
+
 // BlockFileHeader
 const blockHeaderSize int = 8192
 const maxBlocks int = (blockHeaderSize - 80) * 8
