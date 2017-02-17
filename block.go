@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -27,7 +28,7 @@ type Entry struct {
 func OpenEntry(addr CacheAddr, dir string) (*Entry, error) {
 	b, err := readAddr(addr, dir)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to open entry: %v", err)
 	}
 
 	reader := bytes.NewReader(b)
@@ -35,7 +36,7 @@ func OpenEntry(addr CacheAddr, dir string) (*Entry, error) {
 
 	err = binary.Read(reader, binary.LittleEndian, block)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to read entry: %v", err)
 	}
 
 	entry := &Entry{entryStore: block, dir: dir}
@@ -59,45 +60,36 @@ func (e Entry) URL() string {
 // Header returns the HTTP header.
 func (e Entry) Header() (http.Header, error) {
 	var (
-		infoSize     int32
-		flag         int32
-		requestTime  int64
-		responseTime int64
-		headerSize   int32
+		// infoSize     int32
+		// flag         int32
+		// requestTime  int64
+		// responseTime int64
+		// offset = sizeof(infoSize+flag+requestTime+responseTime)
+		offset     int64 = 24
+		headerSize int32
 	)
 
 	size, addr := e.DataSize[0], e.DataAddr[0]
 	b, err := readAddrSize(addr, e.dir, uint32(size))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to read header: %v", err)
 	}
 	reader := bytes.NewReader(b)
 
-	err = binary.Read(reader, binary.LittleEndian, &infoSize)
+	_, err = reader.Seek(offset, io.SeekStart)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to seek header: %v", err)
 	}
-	err = binary.Read(reader, binary.LittleEndian, &flag)
-	if err != nil {
-		return nil, err
-	}
-	err = binary.Read(reader, binary.LittleEndian, &requestTime)
-	if err != nil {
-		return nil, err
-	}
-	err = binary.Read(reader, binary.LittleEndian, &responseTime)
-	if err != nil {
-		return nil, err
-	}
+
 	err = binary.Read(reader, binary.LittleEndian, &headerSize)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to read header size: %v", err)
 	}
 
 	p := make([]byte, headerSize)
 	err = binary.Read(reader, binary.LittleEndian, p)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to read header data: %v", err)
 	}
 
 	header := make(http.Header)
@@ -128,7 +120,7 @@ func (e Entry) Body() (io.ReadCloser, error) {
 
 	b, err := readAddrSize(addr, e.dir, uint32(size))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to read body: %v", err)
 	}
 	reader := bytes.NewReader(b)
 	return ioutil.NopCloser(reader), nil

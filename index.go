@@ -22,7 +22,9 @@ func OpenCache(dir string) (*DiskCache, error) {
 
 // URLs returns all the URLs currently stored.
 func (cache DiskCache) URLs() []string {
-	return cache.key
+	urls := make([]string, len(cache.key))
+	copy(urls, cache.key)
+	return urls
 }
 
 // GetAddr returns the addr for url.
@@ -45,12 +47,12 @@ func (cache DiskCache) OpenURL(url string) (*Entry, error) {
 func openCache(dir string) (*DiskCache, error) {
 	err := checkCache(dir)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid cache: %v", err)
 	}
 
 	file, err := os.Open(path.Join(dir, "index"))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to open index: %v", err)
 	}
 	defer file.Close()
 
@@ -61,7 +63,7 @@ func readIndex(file *os.File) (*DiskCache, error) {
 	index := new(indexHeader)
 	err := binary.Read(file, binary.LittleEndian, index)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to read index: %v", err)
 	}
 
 	if index.Magic != magicNumber {
@@ -85,7 +87,7 @@ func readIndex(file *os.File) (*DiskCache, error) {
 			cache.readAddr(*addr)
 		}
 	}
-	return cache, err
+	return cache, nil
 }
 
 func (cache *DiskCache) readAddr(addr CacheAddr) {
@@ -106,7 +108,7 @@ func checkCache(dir string) error {
 	name := path.Clean(dir)
 	info, err := os.Stat(name)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to stat %q: %v", dir, err)
 	}
 	if !info.IsDir() {
 		return fmt.Errorf("not a directory: %q", dir)
@@ -114,15 +116,13 @@ func checkCache(dir string) error {
 
 	_, err = os.Stat(path.Join(name, "index"))
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to stat index: %v", err)
 	}
 
-	blocks, err := filepath.Glob(path.Join(name, "data_[0-3]"))
-	if err != nil {
-		return err
-	}
+	// ignore err as the only possible returned error is filepath.ErrBadPattern
+	blocks, _ := filepath.Glob(path.Join(name, "data_[0-3]"))
 	if len(blocks) != 4 {
-		return fmt.Errorf("not a cache directory: %q", dir)
+		return fmt.Errorf("missing block files")
 	}
 	return nil
 }
