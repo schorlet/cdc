@@ -1,4 +1,18 @@
 // Command cdc helps reading disk cache on command line.
+//
+//  Usage:
+//	cdc command [flag] CACHEDIR
+//
+// 	The commands are:
+//		list        list entries
+//		header      print entry header
+//		body        print entry body
+//
+//	The flags are:
+//		-url string        entry url
+//		-addr string       entry addr
+//
+//	CACHEDIR is the path to the chromium cache directory.
 package main
 
 import (
@@ -15,11 +29,9 @@ import (
 const usage = `cdc is a tool for reading Chromium disk cache v2.
 
 Usage:
-
     cdc command [flag] CACHEDIR
 
 The commands are:
-
     list        list entries
     header      print entry header
     body        print entry body

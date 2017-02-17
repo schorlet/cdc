@@ -1,5 +1,9 @@
 // Package cdc provides support for reading Chromium disk cache v2.
 // https://www.chromium.org/developers/design-documents/network-stack/disk-cache
+//
+//  Learn more:
+//	http://www.forensicswiki.org/wiki/Google_Chrome#Disk_Cache
+//	http://www.forensicswiki.org/wiki/Chrome_Disk_Cache_Format
 package cdc
 
 // Helpful resources:
@@ -8,8 +12,6 @@ package cdc
 // https://chromium.googlesource.com/chromium/src/net/+/master/disk_cache/blockfile/addr.h
 // https://chromium.googlesource.com/chromium/src/net/+/master/http/http_response_info.cc
 // https://chromium.googlesource.com/chromium/src/base/+/master/pickle.cc
-// http://www.forensicswiki.org/wiki/Google_Chrome#Disk_Cache
-// http://www.forensicswiki.org/wiki/Chrome_Disk_Cache_Format
 // http://chip-dfir.techanarchy.net/?p=8
 
 import (
