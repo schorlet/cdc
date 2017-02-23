@@ -21,7 +21,7 @@ func OpenCache(dir string) (*DiskCache, error) {
 }
 
 // URLs returns all the URLs currently stored.
-func (cache DiskCache) URLs() []string {
+func (cache *DiskCache) URLs() []string {
 	urls := make([]string, len(cache.key))
 	copy(urls, cache.key)
 	return urls
@@ -29,13 +29,13 @@ func (cache DiskCache) URLs() []string {
 
 // GetAddr returns the addr for url.
 // The returned CacheAddr might not be initialized, meaning that the url is unknown.
-func (cache DiskCache) GetAddr(url string) CacheAddr {
+func (cache *DiskCache) GetAddr(url string) CacheAddr {
 	h := hash(url)
 	return cache.addr[h]
 }
 
 // OpenURL returns the Entry for url.
-func (cache DiskCache) OpenURL(url string) (*Entry, error) {
+func (cache *DiskCache) OpenURL(url string) (*Entry, error) {
 	h := hash(url)
 	addr, ok := cache.addr[h]
 	if !ok {

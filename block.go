@@ -44,7 +44,7 @@ func OpenEntry(addr CacheAddr, dir string) (*Entry, error) {
 }
 
 // URL returns the entry URL.
-func (e Entry) URL() string {
+func (e *Entry) URL() string {
 	var key []byte
 	if e.LongKey == 0 {
 		if e.KeyLen <= blockKeyLen {
@@ -58,7 +58,7 @@ func (e Entry) URL() string {
 }
 
 // Header returns the HTTP header.
-func (e Entry) Header() (http.Header, error) {
+func (e *Entry) Header() (http.Header, error) {
 	var (
 		// infoSize     int32
 		// flag         int32
@@ -107,7 +107,7 @@ func (e Entry) Header() (http.Header, error) {
 }
 
 // Body returns the HTTP body.
-func (e Entry) Body() (io.ReadCloser, error) {
+func (e *Entry) Body() (io.ReadCloser, error) {
 	size, addr := e.DataSize[1], e.DataAddr[1]
 	if !addr.Initialized() {
 		return nil, ErrBadAddr
