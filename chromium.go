@@ -113,18 +113,18 @@ type entryStore struct {
 // CacheAddr defines a storage address for an Entry.
 type CacheAddr uint32
 
-// Initialized returns the initialization state.
-func (addr CacheAddr) Initialized() bool {
+// initialized returns the initialization state.
+func (addr CacheAddr) initialized() bool {
 	return (uint32(addr) & initializedMask) != 0
 }
 
-// SeparateFile returns true if the cache record
+// separateFile returns true if the cache record
 // is located in a separated file.
-func (addr CacheAddr) SeparateFile() bool {
+func (addr CacheAddr) separateFile() bool {
 	return (uint32(addr) & fileTypeMask) == 0
 }
 
-// FileType returns one of these values:
+// fileType returns one of these values:
 //  EXTERNAL = 0,
 //  RANKINGS = 1,
 //  BLOCK_256 = 2,
@@ -133,41 +133,40 @@ func (addr CacheAddr) SeparateFile() bool {
 //  BLOCK_FILES = 5,
 //  BLOCK_ENTRIES = 6,
 //  BLOCK_EVICTED = 7
-func (addr CacheAddr) FileType() uint32 {
+func (addr CacheAddr) fileType() uint32 {
 	return (uint32(addr) & fileTypeMask) >> fileTypeOffset
 }
 
-// FileNumber returns the file number.
-func (addr CacheAddr) FileNumber() uint32 {
-	if addr.SeparateFile() {
+// fileNumber returns the file number.
+func (addr CacheAddr) fileNumber() uint32 {
+	if addr.separateFile() {
 		return uint32(addr) & fileNameMask
 	}
 	return (uint32(addr) & fileSelectorMask) >> fileSelectorOffset
 }
 
-// FileName returns the file name.
-func (addr CacheAddr) FileName() (name string) {
-	if !addr.Initialized() {
-		// ""
-	} else if addr.SeparateFile() {
-		name = fmt.Sprintf("f_%06x", addr.FileNumber())
-	} else {
-		name = fmt.Sprintf("data_%d", addr.FileNumber())
+// fileName returns the file name.
+func (addr CacheAddr) fileName() string {
+	if !addr.initialized() {
+		return ""
 	}
-	return
+	if addr.separateFile() {
+		return fmt.Sprintf("f_%06x", addr.fileNumber())
+	}
+	return fmt.Sprintf("data_%d", addr.fileNumber())
 }
 
-// StartBlock returns the start block.
-func (addr CacheAddr) StartBlock() uint32 {
-	if addr.SeparateFile() {
+// startBlock returns the start block.
+func (addr CacheAddr) startBlock() uint32 {
+	if addr.separateFile() {
 		return 0
 	}
 	return uint32(addr) & startBlockMask
 }
 
-// BlockSize returns the block size.
-func (addr CacheAddr) BlockSize() uint32 {
-	switch addr.FileType() {
+// blockSize returns the block size.
+func (addr CacheAddr) blockSize() uint32 {
+	switch addr.fileType() {
 	case 1: // RANKINGS
 		return 36
 	case 2: // BLOCK_256
@@ -186,9 +185,9 @@ func (addr CacheAddr) BlockSize() uint32 {
 	return 0 // EXTERNAL
 }
 
-// NumBlocks returns the number of blocks.
-func (addr CacheAddr) NumBlocks() uint32 {
-	if addr.SeparateFile() {
+// numBlocks returns the number of blocks.
+func (addr CacheAddr) numBlocks() uint32 {
+	if addr.separateFile() {
 		return 0
 	}
 	return ((uint32(addr) & numBlocksMask) >> numBlocksOffset) + 1

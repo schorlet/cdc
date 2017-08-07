@@ -16,9 +16,6 @@ import (
 // ErrNotFound is returned if the entry is not found.
 var ErrNotFound = errors.New("entry not found")
 
-// ErrBadAddr is returned if the addr is not initialized.
-var ErrBadAddr = errors.New("addr is not initialized")
-
 // Entry represents a HTTP response as stored in the cache.
 type Entry struct {
 	*entryStore
@@ -111,12 +108,12 @@ func (e *Entry) Header() (http.Header, error) {
 // Body returns the HTTP body.
 func (e *Entry) Body() (io.ReadCloser, error) {
 	size, addr := e.DataSize[1], e.DataAddr[1]
-	if !addr.Initialized() {
-		return nil, ErrBadAddr
+	if !addr.initialized() {
+		return nil, fmt.Errorf("open body: invalid adress")
 	}
 
-	if addr.SeparateFile() {
-		name := path.Join(e.dir, addr.FileName())
+	if addr.separateFile() {
+		name := path.Join(e.dir, addr.fileName())
 		file, err := os.Open(name)
 		if err != nil {
 			return nil, fmt.Errorf("open body: %v", err)
@@ -133,20 +130,20 @@ func (e *Entry) Body() (io.ReadCloser, error) {
 }
 
 func readAddr(addr CacheAddr, dir string) ([]byte, error) {
-	if !addr.Initialized() {
-		return nil, ErrBadAddr
+	if !addr.initialized() {
+		return nil, fmt.Errorf("readAddr: invalid adress")
 	}
-	size := addr.BlockSize() * addr.NumBlocks()
+	size := addr.blockSize() * addr.numBlocks()
 	return readAddrSize(addr, dir, size)
 }
 
 func readAddrSize(addr CacheAddr, dir string, size uint32) ([]byte, error) {
-	if !addr.Initialized() {
-		return nil, ErrBadAddr
+	if !addr.initialized() {
+		return nil, fmt.Errorf("readAddr: invalid adress")
 	}
 
-	name := path.Join(dir, addr.FileName())
-	if addr.SeparateFile() {
+	name := path.Join(dir, addr.fileName())
+	if addr.separateFile() {
 		data, err := ioutil.ReadFile(name)
 		if err != nil {
 			return nil, fmt.Errorf("readAddr: %v", err)
@@ -160,7 +157,7 @@ func readAddrSize(addr CacheAddr, dir string, size uint32) ([]byte, error) {
 	}
 	defer close(file)
 
-	offset := addr.StartBlock()*addr.BlockSize() + uint32(blockHeaderSize)
+	offset := addr.startBlock()*addr.blockSize() + uint32(blockHeaderSize)
 	block := make([]byte, size)
 
 	_, err = file.ReadAt(block, int64(offset))

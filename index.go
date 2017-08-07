@@ -90,7 +90,7 @@ func OpenCache(dir string) (*DiskCache, error) {
 		if err != nil {
 			return nil, fmt.Errorf("open cache: %v", err)
 		}
-		if addr.Initialized() {
+		if addr.initialized() {
 			cache.readAddr(addr)
 		}
 	}
