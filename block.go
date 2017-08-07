@@ -109,7 +109,7 @@ func (e *Entry) Header() (http.Header, error) {
 func (e *Entry) Body() (io.ReadCloser, error) {
 	size, addr := e.DataSize[1], e.DataAddr[1]
 	if !addr.initialized() {
-		return nil, fmt.Errorf("open body: invalid adress")
+		return nil, fmt.Errorf("open body: invalid address")
 	}
 
 	if addr.separateFile() {
@@ -131,7 +131,7 @@ func (e *Entry) Body() (io.ReadCloser, error) {
 
 func readAddr(addr CacheAddr, dir string) ([]byte, error) {
 	if !addr.initialized() {
-		return nil, fmt.Errorf("readAddr: invalid adress")
+		return nil, fmt.Errorf("readAddr: invalid address")
 	}
 	size := addr.blockSize() * addr.numBlocks()
 	return readAddrSize(addr, dir, size)
@@ -139,7 +139,7 @@ func readAddr(addr CacheAddr, dir string) ([]byte, error) {
 
 func readAddrSize(addr CacheAddr, dir string, size uint32) ([]byte, error) {
 	if !addr.initialized() {
-		return nil, fmt.Errorf("readAddr: invalid adress")
+		return nil, fmt.Errorf("readAddr: invalid address")
 	}
 
 	name := path.Join(dir, addr.fileName())
