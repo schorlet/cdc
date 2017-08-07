@@ -13,12 +13,12 @@ import (
 	"github.com/schorlet/cdc"
 )
 
-type req struct {
-	url       string
-	ctype     string
-	cencoding string
-	clength   string
-	status    int
+type request struct {
+	url      string
+	mime     string
+	encoding string
+	length   string
+	status   int
 }
 
 func withContext(fn func(url string)) {
@@ -45,70 +45,67 @@ func makeURL(base, view string) string {
 
 func TestView(t *testing.T) {
 	withContext(func(base string) {
-		tts := []req{
+		requests := []request{
 			{
-				url:       makeURL(base, "https://golang.org/doc/gopher/pkg.png"),
-				ctype:     "image/png",
-				cencoding: "",
-				clength:   "5409",
-				status:    http.StatusOK,
+				url:    makeURL(base, "https://golang.org/doc/gopher/pkg.png"),
+				mime:   "image/png",
+				length: "5409",
+				status: http.StatusOK,
 			},
 			{
-				url:       makeURL(base, "https://golang.org/lib/godoc/godocs.js"),
-				ctype:     "application/x-javascript",
-				cencoding: "gzip",
-				clength:   "5186",
-				status:    http.StatusOK,
+				url:      makeURL(base, "https://golang.org/lib/godoc/godocs.js"),
+				mime:     "application/x-javascript",
+				encoding: "gzip",
+				length:   "5186",
+				status:   http.StatusOK,
 			}, {
-				url:       makeURL(base, "https://golang.org/pkg/"),
-				ctype:     "text/html; charset=utf-8",
-				cencoding: "gzip",
-				clength:   "8476",
-				status:    http.StatusOK,
+				url:      makeURL(base, "https://golang.org/pkg/"),
+				mime:     "text/html; charset=utf-8",
+				encoding: "gzip",
+				length:   "8476",
+				status:   http.StatusOK,
 			}, {
 				url:    makeURL(base, "https://golang.org/"),
+				mime:   "text/plain; charset=utf-8",
+				length: "16",
 				status: http.StatusNotFound,
 			},
 		}
 
-		client := &http.Client{
+		client := http.Client{
 			Transport: &http.Transport{
 				DisableCompression: true,
 			},
 		}
 
-		for _, tt := range tts {
-			res, err := client.Get(tt.url)
+		for _, req := range requests {
+			res, err := client.Get(req.url)
 			if err != nil {
 				t.Fatal(err)
 			}
-
-			verify(t, tt, res)
+			verify(t, req, res)
 		}
 	})
 }
 
-func verify(t *testing.T, r req, res *http.Response) {
-	if res.StatusCode != r.status {
-		t.Fatalf("bad statuscode: %d, want: %d", res.StatusCode, r.status)
-	}
-	if res.StatusCode != http.StatusOK {
-		return
+func verify(t *testing.T, req request, res *http.Response) {
+	if res.StatusCode != req.status {
+		t.Fatalf("bad statuscode: %d, want: %d", res.StatusCode, req.status)
 	}
 
-	cl := res.Header.Get("Content-Length")
-	if cl != r.clength {
-		t.Fatalf("bad content-length: %q, want: %q", cl, r.clength)
+	length := res.Header.Get("Content-Length")
+	if length != req.length {
+		t.Fatalf("bad content-length: %q, want: %q", length, req.length)
 	}
 
-	ct := res.Header.Get("Content-Type")
-	if ct != r.ctype {
-		t.Fatalf("bad content-type: %q, want: %q", ct, r.ctype)
+	mime := res.Header.Get("Content-Type")
+	if mime != req.mime {
+		t.Fatalf("bad content-type: %q, want: %q", mime, req.mime)
 	}
 
-	ce := res.Header.Get("Content-Encoding")
-	if ce != r.cencoding {
-		t.Fatalf("bad content-encoding: %q, want: %q", ce, r.cencoding)
+	encoding := res.Header.Get("Content-Encoding")
+	if encoding != req.encoding {
+		t.Fatalf("bad content-encoding: %q, want: %q", encoding, req.encoding)
 	}
 
 	n, err := io.Copy(ioutil.Discard, res.Body)
@@ -117,7 +114,7 @@ func verify(t *testing.T, r req, res *http.Response) {
 	}
 	_ = res.Body.Close()
 
-	nlength, _ := strconv.ParseInt(r.clength, 10, 64)
+	nlength, _ := strconv.ParseInt(req.length, 10, 64)
 	if n != nlength {
 		t.Fatalf("bad stream size: %d, want: %d", n, nlength)
 	}

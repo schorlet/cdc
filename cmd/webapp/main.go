@@ -21,7 +21,7 @@ type cacheHandler struct {
 // CacheHandler returns a handler that serves HTTP requests
 // with the contents of the specified cache.
 func CacheHandler(cache *cdc.DiskCache) http.Handler {
-	handler := &cacheHandler{
+	handler := cacheHandler{
 		DiskCache: cache,
 		host:      make(map[string]bool),
 		url:       make(map[string][]string),
@@ -39,7 +39,7 @@ func CacheHandler(cache *cdc.DiskCache) http.Handler {
 			handler.url[u.Host] = append(handler.url[u.Host], ustr)
 		}
 	}
-	return handler
+	return &handler
 }
 
 // ServeHTTP responds to an HTTP request.
@@ -69,7 +69,7 @@ func (h *cacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleHost prints all hosts or all urls from host.
+// handleHost prints all hosts or all URLs from host.
 func (h *cacheHandler) handleHost(w http.ResponseWriter, r *http.Request, host string) {
 	t, err := template.ParseFiles("index.html")
 	if err != nil {
@@ -169,39 +169,33 @@ func redirectView(location, view string) (string, error) {
 //  request      /doc/gopher/pkg.png
 //  referer      http://localhost:8000/?view=https://golang.org/pkg/
 //  returns      https://golang.org/doc/gopher/pkg.png
-func assetView(r *http.Request) (v string) {
+func assetView(r *http.Request) string {
 	referer := r.Referer()
 
 	if referer == "" {
-		return
+		return ""
 	}
-
 	refererURL, err := url.Parse(referer)
 	if err != nil {
-		return
+		return ""
 	}
-
 	if refererURL.Host != r.Host {
-		return
+		return ""
 	}
 
 	view := refererURL.Query().Get("view")
 	if view == "" {
-		return
+		return ""
 	}
-
 	baseView, err := url.Parse(view)
 	if err != nil {
-		return
+		return ""
 	}
-
 	nextView, err := baseView.Parse(r.URL.Path)
 	if err != nil {
-		return
+		return ""
 	}
-
-	v = nextView.String()
-	return
+	return nextView.String()
 }
 
 const usage = `this is a webapp for reading Chromium disk cache v2.

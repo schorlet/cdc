@@ -7,40 +7,41 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"path"
 )
 
-// ErrNotFound is returned when an entry is not found in cache.
+// ErrNotFound is returned if the entry is not found.
 var ErrNotFound = errors.New("entry not found")
 
 // ErrBadAddr is returned if the addr is not initialized.
 var ErrBadAddr = errors.New("addr is not initialized")
 
-// Entry represents a cache record as stored in the disk cache.
+// Entry represents a HTTP response as stored in the cache.
 type Entry struct {
 	*entryStore
 	dir string
 }
 
-// OpenEntry returns the Entry at addr, in the disk cache at dir.
+// OpenEntry returns the Entry at the specified address.
 func OpenEntry(addr CacheAddr, dir string) (*Entry, error) {
 	b, err := readAddr(addr, dir)
 	if err != nil {
-		return nil, fmt.Errorf("unable to open entry: %v", err)
+		return nil, fmt.Errorf("open entry: %d, %v", addr, err)
 	}
 
 	reader := bytes.NewReader(b)
-	block := new(entryStore)
+	var block entryStore
 
-	err = binary.Read(reader, binary.LittleEndian, block)
+	err = binary.Read(reader, binary.LittleEndian, &block)
 	if err != nil {
-		return nil, fmt.Errorf("unable to read entry: %v", err)
+		return nil, fmt.Errorf("read entry: %d, %v", addr, err)
 	}
 
-	entry := &Entry{entryStore: block, dir: dir}
-	return entry, nil
+	entry := Entry{entryStore: &block, dir: dir}
+	return &entry, nil
 }
 
 // URL returns the entry URL.
@@ -60,11 +61,12 @@ func (e *Entry) URL() string {
 // Header returns the HTTP header.
 func (e *Entry) Header() (http.Header, error) {
 	var (
-		// infoSize     int32
-		// flag         int32
-		// requestTime  int64
-		// responseTime int64
-		// offset = sizeof(infoSize+flag+requestTime+responseTime)
+		// offset = sizeof(
+		// 		infoSize     int32
+		// 		flag         int32
+		// 		requestTime  int64
+		// 		responseTime int64
+		// )
 		offset     int64 = 24
 		headerSize int32
 	)
@@ -72,24 +74,24 @@ func (e *Entry) Header() (http.Header, error) {
 	size, addr := e.DataSize[0], e.DataAddr[0]
 	b, err := readAddrSize(addr, e.dir, uint32(size))
 	if err != nil {
-		return nil, fmt.Errorf("unable to read header: %v", err)
+		return nil, fmt.Errorf("read header: %v", err)
 	}
 	reader := bytes.NewReader(b)
 
 	_, err = reader.Seek(offset, io.SeekStart)
 	if err != nil {
-		return nil, fmt.Errorf("unable to seek header: %v", err)
+		return nil, fmt.Errorf("seek header: %v", err)
 	}
 
 	err = binary.Read(reader, binary.LittleEndian, &headerSize)
 	if err != nil {
-		return nil, fmt.Errorf("unable to read header size: %v", err)
+		return nil, fmt.Errorf("read header size: %v", err)
 	}
 
 	p := make([]byte, headerSize)
 	err = binary.Read(reader, binary.LittleEndian, p)
 	if err != nil {
-		return nil, fmt.Errorf("unable to read header data: %v", err)
+		return nil, fmt.Errorf("read header data: %v", err)
 	}
 
 	header := make(http.Header)
@@ -115,12 +117,16 @@ func (e *Entry) Body() (io.ReadCloser, error) {
 
 	if addr.SeparateFile() {
 		name := path.Join(e.dir, addr.FileName())
-		return os.Open(name)
+		file, err := os.Open(name)
+		if err != nil {
+			return nil, fmt.Errorf("open body: %v", err)
+		}
+		return file, nil
 	}
 
 	b, err := readAddrSize(addr, e.dir, uint32(size))
 	if err != nil {
-		return nil, fmt.Errorf("unable to read body: %v", err)
+		return nil, fmt.Errorf("read body: %v", err)
 	}
 	reader := bytes.NewReader(b)
 	return ioutil.NopCloser(reader), nil
@@ -130,7 +136,6 @@ func readAddr(addr CacheAddr, dir string) ([]byte, error) {
 	if !addr.Initialized() {
 		return nil, ErrBadAddr
 	}
-
 	size := addr.BlockSize() * addr.NumBlocks()
 	return readAddrSize(addr, dir, size)
 }
@@ -141,24 +146,32 @@ func readAddrSize(addr CacheAddr, dir string, size uint32) ([]byte, error) {
 	}
 
 	name := path.Join(dir, addr.FileName())
-
 	if addr.SeparateFile() {
-		return ioutil.ReadFile(name)
+		data, err := ioutil.ReadFile(name)
+		if err != nil {
+			return nil, fmt.Errorf("readAddr: %v", err)
+		}
+		return data, nil
 	}
 
 	file, err := os.Open(name)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("readAddr: %v", err)
 	}
-	defer file.Close()
+	defer close(file)
 
 	offset := addr.StartBlock()*addr.BlockSize() + uint32(blockHeaderSize)
 	block := make([]byte, size)
 
 	_, err = file.ReadAt(block, int64(offset))
-	return block, err
+	if err != nil {
+		return nil, fmt.Errorf("readAddr: %v", err)
+	}
+	return block, nil
 }
 
-func hash(s string) uint32 {
-	return superFastHash([]byte(s))
+func close(f *os.File) {
+	if err := f.Close(); err != nil {
+		log.Printf("Error closing file %s: %v\n", f.Name(), err)
+	}
 }

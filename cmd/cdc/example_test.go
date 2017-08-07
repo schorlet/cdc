@@ -22,14 +22,14 @@ func init() {
 func Example_list() {
 	cmd := exec.Command("./cdc", "list", "../../testdata")
 
-	output := new(bytes.Buffer)
-	cmd.Stdout = output
+	var output bytes.Buffer
+	cmd.Stdout = &output
 
 	if err := cmd.Run(); err != nil {
 		log.Fatal(err)
 	}
 
-	lines := read(output)
+	lines := read(&output)
 	for _, line := range lines {
 		fmt.Println(line)
 	}
@@ -60,14 +60,14 @@ func Example_list() {
 func Example_header() {
 	cmd := exec.Command("./cdc", "header", "-addr", "2684420101", "../../testdata")
 
-	output := new(bytes.Buffer)
-	cmd.Stdout = output
+	var output bytes.Buffer
+	cmd.Stdout = &output
 
 	if err := cmd.Run(); err != nil {
 		log.Fatal(err)
 	}
 
-	lines := read(output)
+	lines := read(&output)
 	for _, line := range lines {
 		fmt.Println(line)
 	}
@@ -87,14 +87,14 @@ func Example_header() {
 func Example_body() {
 	cmd := exec.Command("./cdc", "body", "-addr", "2684420101", "../../testdata")
 
-	output := new(bytes.Buffer)
-	cmd.Stdout = output
+	var output bytes.Buffer
+	cmd.Stdout = &output
 
 	if err := cmd.Run(); err != nil {
 		log.Fatal(err)
 	}
 
-	config, err := png.DecodeConfig(output)
+	config, err := png.DecodeConfig(&output)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -3,96 +3,104 @@ package cdc
 import (
 	"encoding/binary"
 	"fmt"
+	"log"
 	"os"
 	"path"
 	"path/filepath"
 )
 
-// DiskCache reads the blocks files and maps URL to CacheAddr.
+// DiskCache gives read access to the chromium disk cache.
+//
+// The cache is composed of one "index" file, four or more "data_[0-9]" files
+// and many of "f_[0-9]+" separate files.
+//
+// Learn more:
+// http://www.forensicswiki.org/wiki/Google_Chrome#Disk_Cache
+// http://www.forensicswiki.org/wiki/Chrome_Disk_Cache_Format
 type DiskCache struct {
 	dir  string               // cache directory
 	addr map[uint32]CacheAddr // [entry.hash]addr
-	key  []string             // []entry.key
-}
-
-// OpenCache opens the disk cache at dir.
-func OpenCache(dir string) (*DiskCache, error) {
-	return openCache(dir)
+	urls []string             // []entry.key
 }
 
 // URLs returns all the URLs currently stored.
 func (cache *DiskCache) URLs() []string {
-	urls := make([]string, len(cache.key))
-	copy(urls, cache.key)
+	urls := make([]string, len(cache.urls))
+	copy(urls, cache.urls)
 	return urls
 }
 
-// GetAddr returns the addr for url.
-// The returned CacheAddr might not be initialized, meaning that the url is unknown.
-func (cache *DiskCache) GetAddr(url string) CacheAddr {
-	h := hash(url)
-	return cache.addr[h]
-}
-
-// OpenURL returns the Entry for url.
-func (cache *DiskCache) OpenURL(url string) (*Entry, error) {
-	h := hash(url)
-	addr, ok := cache.addr[h]
+// GetAddr returns the cache address of the URL.
+// An error is returned if the URL is not found.
+func (cache *DiskCache) GetAddr(url string) (CacheAddr, error) {
+	hash := superFastHash([]byte(url))
+	addr, ok := cache.addr[hash]
 	if !ok {
-		return nil, ErrNotFound
+		return addr, ErrNotFound
 	}
-	return OpenEntry(addr, cache.dir)
+	return addr, nil
 }
 
-func openCache(dir string) (*DiskCache, error) {
+// OpenURL returns the Entry for the specified URL.
+// An error is returned if the URL is not found.
+func (cache *DiskCache) OpenURL(url string) (*Entry, error) {
+	addr, err := cache.GetAddr(url)
+	if err != nil {
+		return nil, err
+	}
+	entry, err := OpenEntry(addr, cache.dir)
+	if err != nil {
+		return nil, fmt.Errorf("open url %s: %v", url, err)
+	}
+	return entry, nil
+}
+
+// OpenCache opens the cache in dir.
+func OpenCache(dir string) (*DiskCache, error) {
 	err := checkCache(dir)
 	if err != nil {
-		return nil, fmt.Errorf("invalid cache: %v", err)
+		return nil, fmt.Errorf("invalid cache: %s, %v", dir, err)
 	}
 
 	file, err := os.Open(path.Join(dir, "index"))
 	if err != nil {
-		return nil, fmt.Errorf("unable to open index: %v", err)
+		return nil, fmt.Errorf("open cache: %v", err)
 	}
-	defer file.Close()
+	defer close(file)
 
-	return readIndex(file)
-}
-
-func readIndex(file *os.File) (*DiskCache, error) {
-	index := new(indexHeader)
-	err := binary.Read(file, binary.LittleEndian, index)
+	var index indexHeader
+	err = binary.Read(file, binary.LittleEndian, &index)
 	if err != nil {
-		return nil, fmt.Errorf("unable to read index: %v", err)
+		return nil, fmt.Errorf("open cache: %v", err)
 	}
-
 	if index.Magic != magicNumber {
-		return nil, fmt.Errorf("bad magic number:%x, want:%x",
+		return nil, fmt.Errorf("magic: %x, want: %x",
 			index.Magic, magicNumber)
 	}
 
-	cache := &DiskCache{
+	cache := DiskCache{
 		dir:  filepath.Dir(file.Name()),
 		addr: make(map[uint32]CacheAddr),
-		key:  make([]string, 0, index.NumEntries),
+		urls: make([]string, 0, index.NumEntries),
 	}
 
+	var addr CacheAddr
 	for i := index.TableLen; i > 0; i-- {
-		addr := new(CacheAddr)
-		err = binary.Read(file, binary.LittleEndian, addr)
+		err = binary.Read(file, binary.LittleEndian, &addr)
 		if err != nil {
-			break
+			return nil, fmt.Errorf("open cache: %v", err)
 		}
 		if addr.Initialized() {
-			cache.readAddr(*addr)
+			cache.readAddr(addr)
 		}
 	}
-	return cache, nil
+	return &cache, nil
 }
 
 func (cache *DiskCache) readAddr(addr CacheAddr) {
 	entry, err := OpenEntry(addr, cache.dir)
 	if err != nil {
+		log.Printf("open cache: %v", err)
 		return
 	}
 	if entry.State == 0 &&
@@ -100,27 +108,26 @@ func (cache *DiskCache) readAddr(addr CacheAddr) {
 		entry.KeyLen <= blockKeyLen {
 
 		cache.addr[entry.Hash] = addr
-		cache.key = append(cache.key, entry.URL())
+		cache.urls = append(cache.urls, entry.URL())
 	}
 }
 
 func checkCache(dir string) error {
-	name := path.Clean(dir)
-	info, err := os.Stat(name)
+	info, err := os.Stat(dir)
 	if err != nil {
-		return fmt.Errorf("unable to stat %q: %v", dir, err)
+		return err
 	}
 	if !info.IsDir() {
-		return fmt.Errorf("not a directory: %q", dir)
+		return fmt.Errorf("not a directory")
 	}
 
-	_, err = os.Stat(path.Join(name, "index"))
+	_, err = os.Stat(path.Join(dir, "index"))
 	if err != nil {
-		return fmt.Errorf("unable to stat index: %v", err)
+		return err
 	}
 
 	// ignore err as the only possible returned error is filepath.ErrBadPattern
-	blocks, _ := filepath.Glob(path.Join(name, "data_[0-3]"))
+	blocks, _ := filepath.Glob(path.Join(dir, "data_[0-3]"))
 	if len(blocks) != 4 {
 		return fmt.Errorf("missing block files")
 	}

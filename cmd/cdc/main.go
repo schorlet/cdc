@@ -56,7 +56,11 @@ func main() {
 
 	if cmd == "list" {
 		for _, url := range cache.URLs() {
-			fmt.Printf("%d\t%s\n", cache.GetAddr(url), url)
+			addr, err := cache.GetAddr(url)
+			if err != nil {
+				log.Printf("address of %s: %v\n", url, err)
+			}
+			fmt.Printf("%d\t%s\n", addr, url)
 		}
 
 	} else {

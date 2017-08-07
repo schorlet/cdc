@@ -1,9 +1,5 @@
 // Package cdc provides support for reading Chromium disk cache v2.
 // https://www.chromium.org/developers/design-documents/network-stack/disk-cache
-//
-//  Learn more:
-//	http://www.forensicswiki.org/wiki/Google_Chrome#Disk_Cache
-//	http://www.forensicswiki.org/wiki/Chrome_Disk_Cache_Format
 package cdc
 
 // Helpful resources:
@@ -41,7 +37,7 @@ const startBlockMask uint32 = 0x0000ffff
 const numBlocksMask uint32 = 0x03000000
 const numBlocksOffset uint32 = 24
 
-// IndexHeader for the master index file.
+// indexHeader for the master index file.
 type indexHeader struct {
 	Magic      uint32
 	Version    uint32
@@ -58,7 +54,7 @@ type indexHeader struct {
 	Lru        [28]int32 // Eviction control data.
 }
 
-// BlockFileHeader is the header of a block-file.
+// blockFileHeader is the header of a block-file.
 // A block-file is the file used to store information in blocks (could be
 // EntryStore blocks, RankingsNode blocks or user-data blocks).
 type blockFileHeader struct {
@@ -76,7 +72,7 @@ type blockFileHeader struct {
 	AllocationMap [maxBlocks / 32]uint32 // 2028, to track used blocks on a block-file.
 }
 
-// EntryStore is the main structure for an entry on the backing storage.
+// entryStore is the main structure for an entry on the backing storage.
 //
 // Breakdown of the metadata:
 //  0c 18 5b c2 00 00 00 00  2e 1d 00 90 06 00 00 00  |..[.............|
@@ -114,12 +110,7 @@ type entryStore struct {
 	Key          [blockKeyLen]byte // null terminated
 }
 
-// func (e entryStore) String() string {
-// return fmt.Sprintf("Hash:%x DataSize:%d DataAddr:%x Key:%s",
-// e.Hash, e.DataSize, e.DataAddr, e.Key)
-// }
-
-// CacheAddr defines a storage address for a cache record.
+// CacheAddr defines a storage address for an Entry.
 type CacheAddr uint32
 
 // Initialized returns the initialization state.
@@ -204,17 +195,17 @@ func (addr CacheAddr) NumBlocks() uint32 {
 }
 
 func init() {
-	ih := new(indexHeader)
+	var ih indexHeader
 	if n := binary.Size(ih); n != 368 {
 		log.Fatalf("IndexHeader size error: %d, want: 368", n)
 	}
 
-	bh := new(blockFileHeader)
+	var bh blockFileHeader
 	if n := binary.Size(bh); n != blockHeaderSize {
 		log.Fatalf("BlockFileHeader size error: %d, want: %d", n, blockHeaderSize)
 	}
 
-	entry := new(entryStore)
+	var entry entryStore
 	if n := binary.Size(entry); n != 256 {
 		log.Fatalf("EntryStore size error: %d, want: 256", n)
 	}
