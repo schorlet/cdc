@@ -109,7 +109,7 @@ func parseArgs(cmd, url, addr, cachedir *string) {
 	*cachedir = flags.Arg(0)
 }
 
-func openEntry(cache *cdc.DiskCache, url, addr, dir string) *cdc.Entry {
+func openEntry(cache *cdc.Cache, url, addr, dir string) *cdc.Entry {
 	var entry *cdc.Entry
 	var err error
 

@@ -13,18 +13,18 @@ import (
 )
 
 type cacheHandler struct {
-	*cdc.DiskCache
+	*cdc.Cache
 	host map[string]bool     // [hostname]bool
 	url  map[string][]string // [hostname]urls
 }
 
 // CacheHandler returns a handler that serves HTTP requests
 // with the contents of the specified cache.
-func CacheHandler(cache *cdc.DiskCache) http.Handler {
+func CacheHandler(cache *cdc.Cache) http.Handler {
 	handler := cacheHandler{
-		DiskCache: cache,
-		host:      make(map[string]bool),
-		url:       make(map[string][]string),
+		Cache: cache,
+		host:  make(map[string]bool),
+		url:   make(map[string][]string),
 	}
 
 	for _, ustr := range cache.URLs() {
