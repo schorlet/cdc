@@ -24,7 +24,7 @@ type Entry struct {
 }
 
 // OpenEntry returns the Entry at the specified address.
-func OpenEntry(addr CacheAddr, dir string) (*Entry, error) {
+func OpenEntry(addr Addr, dir string) (*Entry, error) {
 	b, err := readAddr(addr, dir)
 	if err != nil {
 		return nil, fmt.Errorf("open entry: %d, %v", addr, err)
@@ -130,7 +130,7 @@ func (e *Entry) Body() (io.ReadCloser, error) {
 	return ioutil.NopCloser(reader), nil
 }
 
-func readAddr(addr CacheAddr, dir string) ([]byte, error) {
+func readAddr(addr Addr, dir string) ([]byte, error) {
 	if !addr.initialized() {
 		return nil, fmt.Errorf("readAddr: invalid address")
 	}
@@ -138,7 +138,7 @@ func readAddr(addr CacheAddr, dir string) ([]byte, error) {
 	return readAddrSize(addr, dir, size)
 }
 
-func readAddrSize(addr CacheAddr, dir string, size uint32) ([]byte, error) {
+func readAddrSize(addr Addr, dir string, size uint32) ([]byte, error) {
 	if !addr.initialized() {
 		return nil, fmt.Errorf("readAddr: invalid address")
 	}

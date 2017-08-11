@@ -18,9 +18,9 @@ import (
 // http://www.forensicswiki.org/wiki/Google_Chrome#Disk_Cache
 // http://www.forensicswiki.org/wiki/Chrome_Disk_Cache_Format
 type DiskCache struct {
-	dir  string               // cache directory
-	addr map[uint32]CacheAddr // [entry.hash]addr
-	urls []string             // []entry.key
+	dir  string          // cache directory
+	addr map[uint32]Addr // [entry.hash]addr
+	urls []string        // []entry.key
 }
 
 // URLs returns all the URLs currently stored.
@@ -32,7 +32,7 @@ func (cache *DiskCache) URLs() []string {
 
 // GetAddr returns the address of the URL.
 // An error is returned if the URL is not found.
-func (cache *DiskCache) GetAddr(url string) (CacheAddr, error) {
+func (cache *DiskCache) GetAddr(url string) (Addr, error) {
 	hash := superFastHash([]byte(url))
 	addr, ok := cache.addr[hash]
 	if !ok {
@@ -82,11 +82,11 @@ func OpenCache(dir string) (*DiskCache, error) {
 
 	cache := DiskCache{
 		dir:  filepath.Dir(file.Name()),
-		addr: make(map[uint32]CacheAddr),
+		addr: make(map[uint32]Addr),
 		urls: make([]string, 0, index.NumEntries),
 	}
 
-	var addr CacheAddr
+	var addr Addr
 	for i := index.TableLen; i > 0; i-- {
 		err = binary.Read(file, binary.LittleEndian, &addr)
 		if err != nil {
@@ -99,7 +99,7 @@ func OpenCache(dir string) (*DiskCache, error) {
 	return &cache, nil
 }
 
-func (cache *DiskCache) readAddr(addr CacheAddr) {
+func (cache *DiskCache) readAddr(addr Addr) {
 	entry, err := OpenEntry(addr, cache.dir)
 	if err != nil {
 		log.Printf("open cache: %v", err)

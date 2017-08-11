@@ -26,7 +26,7 @@ const maxBlocks int = (blockHeaderSize - 80) * 8
 // EntryStore
 const blockKeyLen int32 = 256 - 24*4
 
-// CacheAddr
+// Addr
 const initializedMask uint32 = 0x80000000
 const fileTypeMask uint32 = 0x70000000
 const fileTypeOffset uint32 = 28
@@ -41,15 +41,15 @@ const numBlocksOffset uint32 = 24
 type indexHeader struct {
 	Magic      uint32
 	Version    uint32
-	NumEntries int32     // Number of entries currently stored.
-	NumBytes   int32     // Total size of the stored data.
-	LastFile   int32     // Last external file created.
-	ThisID     int32     // Id for all entries being changed (dirty flag).
-	Stats      CacheAddr // Storage for usage data.
-	TableLen   int32     // Actual size of the table (0 == kIndexTablesize).
-	Crash      int32     // Signals a previous crash.
-	Experiment int32     // Id of an ongoing test.
-	CreateTime uint64    // Creation time for this set of files.
+	NumEntries int32  // Number of entries currently stored.
+	NumBytes   int32  // Total size of the stored data.
+	LastFile   int32  // Last external file created.
+	ThisID     int32  // Id for all entries being changed (dirty flag).
+	Stats      Addr   // Storage for usage data.
+	TableLen   int32  // Actual size of the table (0 == kIndexTablesize).
+	Crash      int32  // Signals a previous crash.
+	Experiment int32  // Id of an ongoing test.
+	CreateTime uint64 // Creation time for this set of files.
 	Pad        [52]int32
 	Lru        [28]int32 // Eviction control data.
 }
@@ -93,34 +93,34 @@ type blockFileHeader struct {
 //  70 74 2f 00 00 00 00 00  00 00 00 00 00 00 00 00  |pt/.............|
 //  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
 type entryStore struct {
-	Hash         uint32    // Full hash of the key.
-	Next         CacheAddr // Next entry with the same hash or bucket.
-	RankingsNode CacheAddr // Rankings node for this entry.
-	ReuseCount   int32     // How often is this entry used.
-	RefetchCount int32     // How often is this fetched from the net.
-	State        int32     // Current state.
+	Hash         uint32 // Full hash of the key.
+	Next         Addr   // Next entry with the same hash or bucket.
+	RankingsNode Addr   // Rankings node for this entry.
+	ReuseCount   int32  // How often is this entry used.
+	RefetchCount int32  // How often is this fetched from the net.
+	State        int32  // Current state.
 	CreationTime uint64
 	KeyLen       int32
-	LongKey      CacheAddr    // Optional address of a long key.
-	DataSize     [4]int32     // We can store up to 4 data streams for each
-	DataAddr     [4]CacheAddr // entry.
-	Flags        uint32       // Any combination of EntryFlags.
+	LongKey      Addr     // Optional address of a long key.
+	DataSize     [4]int32 // We can store up to 4 data streams for each
+	DataAddr     [4]Addr  // entry.
+	Flags        uint32   // Any combination of EntryFlags.
 	Pad          [4]int32
 	SelfHash     uint32            // The hash of EntryStore up to this point.
 	Key          [blockKeyLen]byte // null terminated
 }
 
-// CacheAddr defines a storage address for an Entry.
-type CacheAddr uint32
+// Addr defines a storage address for an Entry.
+type Addr uint32
 
 // initialized returns the initialization state.
-func (addr CacheAddr) initialized() bool {
+func (addr Addr) initialized() bool {
 	return (uint32(addr) & initializedMask) != 0
 }
 
 // separateFile returns true if the cache record
 // is located in a separated file.
-func (addr CacheAddr) separateFile() bool {
+func (addr Addr) separateFile() bool {
 	return (uint32(addr) & fileTypeMask) == 0
 }
 
@@ -133,12 +133,12 @@ func (addr CacheAddr) separateFile() bool {
 //  BLOCK_FILES = 5,
 //  BLOCK_ENTRIES = 6,
 //  BLOCK_EVICTED = 7
-func (addr CacheAddr) fileType() uint32 {
+func (addr Addr) fileType() uint32 {
 	return (uint32(addr) & fileTypeMask) >> fileTypeOffset
 }
 
 // fileNumber returns the file number.
-func (addr CacheAddr) fileNumber() uint32 {
+func (addr Addr) fileNumber() uint32 {
 	if addr.separateFile() {
 		return uint32(addr) & fileNameMask
 	}
@@ -146,7 +146,7 @@ func (addr CacheAddr) fileNumber() uint32 {
 }
 
 // fileName returns the file name.
-func (addr CacheAddr) fileName() string {
+func (addr Addr) fileName() string {
 	if !addr.initialized() {
 		return ""
 	}
@@ -157,7 +157,7 @@ func (addr CacheAddr) fileName() string {
 }
 
 // startBlock returns the start block.
-func (addr CacheAddr) startBlock() uint32 {
+func (addr Addr) startBlock() uint32 {
 	if addr.separateFile() {
 		return 0
 	}
@@ -165,7 +165,7 @@ func (addr CacheAddr) startBlock() uint32 {
 }
 
 // blockSize returns the block size.
-func (addr CacheAddr) blockSize() uint32 {
+func (addr Addr) blockSize() uint32 {
 	switch addr.fileType() {
 	case 1: // RANKINGS
 		return 36
@@ -186,7 +186,7 @@ func (addr CacheAddr) blockSize() uint32 {
 }
 
 // numBlocks returns the number of blocks.
-func (addr CacheAddr) numBlocks() uint32 {
+func (addr Addr) numBlocks() uint32 {
 	if addr.separateFile() {
 		return 0
 	}

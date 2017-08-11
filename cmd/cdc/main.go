@@ -118,7 +118,7 @@ func openEntry(cache *cdc.DiskCache, url, addr, dir string) *cdc.Entry {
 		if era != nil {
 			log.Fatal(era)
 		}
-		entry, err = cdc.OpenEntry(cdc.CacheAddr(id), dir)
+		entry, err = cdc.OpenEntry(cdc.Addr(id), dir)
 
 	} else if url != "" {
 		entry, err = cache.OpenURL(url)
