@@ -17,6 +17,7 @@ import (
 var ErrNotFound = errors.New("entry not found")
 
 // Entry represents a HTTP response as stored in the cache.
+// An Entry is stored in one of the "data_[0-9]" files or in a "f_[0-9]+" separate file.
 type Entry struct {
 	*entryStore
 	dir string

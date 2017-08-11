@@ -30,7 +30,7 @@ func (cache *DiskCache) URLs() []string {
 	return urls
 }
 
-// GetAddr returns the cache address of the URL.
+// GetAddr returns the address of the URL.
 // An error is returned if the URL is not found.
 func (cache *DiskCache) GetAddr(url string) (CacheAddr, error) {
 	hash := superFastHash([]byte(url))
@@ -56,6 +56,8 @@ func (cache *DiskCache) OpenURL(url string) (*Entry, error) {
 }
 
 // OpenCache opens the cache in dir.
+// Opens the "index" file to read the addresses and then
+// opens each Entry to read the URL and associate it to an address.
 func OpenCache(dir string) (*DiskCache, error) {
 	err := checkCache(dir)
 	if err != nil {
