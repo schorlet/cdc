@@ -82,7 +82,7 @@ func OpenCache(dir string) (*Cache, error) {
 
 	cache := Cache{
 		dir:  filepath.Dir(file.Name()),
-		addr: make(map[uint32]Addr),
+		addr: make(map[uint32]Addr, index.NumEntries),
 		urls: make([]string, 0, index.NumEntries),
 	}
 

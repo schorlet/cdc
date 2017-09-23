@@ -1,4 +1,4 @@
-// Command cdc helps reading disk cache on command line.
+// Command cdc helps reading disk cache from command line.
 //
 //  Usage:
 //	cdc command [flag] CACHEDIR

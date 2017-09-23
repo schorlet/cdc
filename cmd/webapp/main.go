@@ -1,4 +1,4 @@
-// Package webapp helps browsing disk cache.
+// Command webapp helps browsing disk cache.
 package main
 
 import (
